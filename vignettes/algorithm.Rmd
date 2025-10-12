@@ -1,0 +1,212 @@
+---
+title: "Algorithm"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{algorithm}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(bondy)
+library(bio3d)
+library(raymolecule)
+library(ChemmineR)
+library(lattice)
+library(ggplot2)
+library(dplyr)
+library(rgl)
+```
+
+
+## Loading data
+
+```{r}
+
+# Read data
+path_benzene_mol2 <- system.file(package="bondy", "benzene.mol2") 
+
+# Bio3d mol2 file
+benzene <- bio3d::read.mol2(path_benzene_mol2)
+benzene_coords <- matrix(benzene$xyz, ncol = 3, byrow = TRUE)
+
+
+# lattice::cloud(x ~ y * z,data = benzene$atom, )
+df_bonds <- enrich_bonds_with_xyz_position(bonds = benzene$bond, atoms = benzene$atom)
+benzene$atom |>
+  ggplot() + 
+  geom_segment(data = df_bonds, mapping = aes(x=x, y=y, xend = xend, yend = yend, linetype = type), colour = "black") +
+  geom_point(aes(x=x, y=y, colour = elena), size = 5) +
+  geom_text(aes(x=x, y=y, label = elena)) +
+  scale_linetype_manual(values = c("ar" = 1, "1" = 2)) + 
+  scale_colour_brewer(palette = "Set2") +
+  coord_fixed() +
+  theme_void() +
+  theme(legend.position = "none")
+
+library(rgl)
+
+open3d()
+spheres3d(x = benzene$atom$x, y=benzene$atom$y, z=benzene$atom$z, col = ifelse(benzene$atom$elena == "H", "red", "blue"),
+  type = 's',
+  radius = .1)
+
+segments3d(x = c(0, 2), y=c(0,2), z=c(0, 2), add=TRUE)
+# 
+#   box=FALSE, axes=FALSE, xlab="", ylab="", zlab="",
+# 
+# rgl::plot3d(x = benzene$atom$x, y=benzene$atom$y, z=benzene$atom$z, col = ifelse(benzene$atom$elena == "H", "red", "blue"),
+#   type = 's',
+#   radius = .1,
+#   box=FALSE, axes=FALSE, xlab="", ylab="", zlab="",
+# )
+```
+
+Visualise with raymolecule
+```{r}
+# library(rayrender)
+# path_benzene_sdf <- system.file(package="bondy", "benzene.sdf")
+# benzene_sdf <- raymolecule::read_sdf(path_benzene_sdf)
+# benzene_sdf |>
+#   generate_full_scene() |> 
+#   render_model(width=800,height=800,samples=1000, clamp_value=10)
+```
+
+```{r}
+path_fe_tri <- system.file(package = "bondy", "fe_tripod.mol2")
+path_pd <- system.file(package = "bondy", "pd.mol2")
+
+fe_tri <- read.mol2(path_fe_tri)
+pd <-  read.mol2(path_pd)
+```
+
+Step1: define coordinate symmetry that describes o symmetry
+```{r}
+cube_corners <- data.frame(
+  x = c(1, 1, -1, -1, 1, 1, -1, -1),
+  y = c(1, -1, 1, -1, 1, -1, 1, -1),
+  z = c(1, 1, 1, 1, -1, -1, -1, -1)
+)
+
+cube_face <- data.frame(
+  x = c(1, -1, 0, 0, 0, 0),
+  y = c(0, 0, 1, -1, 0, 0),
+  z = c(0, 0, 0, 0, 1, -1)
+)
+
+rgl::plot3d(cube_corners, type="s", box=FALSE, axes=TRUE, xlab="", ylab="", zlab="")
+points3d(cube_face, col="red")
+```
+
+Step2:  Import mol and choose 'bonding atoms' (based on element number)
+```{r}
+df_tri_atom <- dplyr::as_tibble(fe_tri$atom)
+
+#USER PARAM
+# bonding_atoms = c("N5;21", "N5", "N5")
+df_tri_atom[df_tri_atom$elena=="N5",]
+bonding_atom_numbers <- c(6, 32, 58)
+
+## Average the X Y Z
+df_tri_atom |> 
+  dplyr::filter(eleno %in% bonding_atom_numbers) |>
+  dplyr::mutate(across(c(x, y, z), mean, .names = "avg_{.col}")) |>
+  dplyr::relocate(.after = z, dplyr::starts_with("avg_"))
+
+df_avg_pos <- df_tri_atom |> 
+  dplyr::filter(eleno %in% bonding_atom_numbers) |>
+  dplyr::summarise(across(c(x, y, z), mean, .names = "avg_{.col}"))
+  
+df_tri_atom_recentered <- df_tri_atom |>
+  mutate(
+    x = x - df_avg_pos$avg_x,
+    y = y - df_avg_pos$avg_y,
+    z = z - df_avg_pos$avg_z,
+  )
+
+rgl::plot3d(cube_corners, type="s", box=FALSE, axes=TRUE, xlab="", ylab="", zlab="")
+points3d(cube_face, col="red")
+with(df_tri_atom_recentered, points3d(x, y, z, col="pink"))
+
+```
+
+Step3: Aligning the Iron to the symmetry axis
+
+```{r}
+## Placeholder we'll go back
+testelement = "Fe1"
+testelementno = 1
+
+df_tri_atom_recentered
+
+# Rotate iron atom to point at top right corner
+target = c(x=1, y=1, z=1) # Top right corner (c3 axis)
+specialpos = unlist(df_tri_atom_recentered[df_tri_atom_recentered$eleno==testelementno, c("x","y",'z')]) # 
+# rotate_vector_to_align_with_target(v = specialpos, target = target)
+
+# Get axis and angle of rotation that would get our iron to face the top right corner
+params <- rotate_vector_to_align_with_target(v = specialpos, target = target, return = "axis_plus_angle")
+
+# Apply that rotation to all the atoms
+new_positions <- purrr::pmap_dfr(df_tri_atom_recentered[c("x", "y", "z")], .f = \(x, y, z){
+  vec = rotate_vector_around_axis(v = c(x, y, z), rotation_axis = params$axis, angle = params$angle)
+  names(vec) <- c("x", "y", "z")
+  return(vec)
+})
+
+df_tri_atom_recentered_rotated <- dplyr::bind_cols(
+  df_tri_atom_recentered[c("eleno", "elena", "elety")], new_positions
+)
+
+df_tri_atom_recentered_rotated 
+
+rgl::plot3d(cube_corners, type="s", box=FALSE, axes=TRUE, xlab="", ylab="", zlab="")
+points3d(cube_face, col="purple", add=TRUE)
+with(df_tri_atom_recentered_rotated, points3d(x, y, z, col="red", add=TRUE))
+
+```
+
+Step 4: rotate bonding atom (first n5) into plane spanned by C3 & C4
+
+```{r}
+v
+plane_normal <- c(0, 1, -1)
+plane_normal_norm <- normalise(plane_normal)
+
+# Pick one of the n5 atoms
+v <- df_tri_atom_recentered_rotated |>
+  dplyr::filter(eleno %in% bonding_atom_numbers) |> 
+  slice_min(order_by = eleno, n = 1) |>
+  select(x,y,z) |>
+  unlist()
+
+# Find paramaters to rotate v into plane_normal
+params2 <- rotate_vector_into_a_plane(v, plane_normal)
+
+# Apply that rotation to all the atoms
+new_positions2 <- purrr::pmap_dfr(df_tri_atom_recentered_rotated[c("x", "y", "z")], .f = \(x, y, z){
+  vec = rotate_vector_around_axis(v = c(x, y, z), rotation_axis = params2$axis, angle = params2$angle)
+  names(vec) <- c("x", "y", "z")
+  return(vec)
+})
+
+df_tri_atom_plane <- dplyr::bind_cols(
+  df_tri_atom_recentered_rotated[c("eleno", "elena", "elety")], new_positions2
+)
+
+
+rgl::plot3d(cube_corners, type="s", box=FALSE, axes=TRUE, xlab="", ylab="", zlab="")
+points3d(cube_face, col="purple", add=TRUE)
+with(df_tri_atom_plane, points3d(x, y, z, col="red", add=TRUE))
+
+
+# Split v into 
+```
+

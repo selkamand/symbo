@@ -7,3 +7,16 @@ enrich_bonds_with_xyz_position <- function(bonds, atoms, origin = "origin", targ
     dplyr::left_join(df_atoms_minimal, by = list(x=origin, y = atom_id)) |>
     dplyr::left_join(df_atoms_minimal_end, by = list(x=target, y = atom_id))
 }
+
+
+
+plot_chem <- function(atoms, bonds, origin = "origin", target="target", atom_id="eleno"){
+  df_bonds <- enrich_bonds_with_xyz_position(bonds, atoms = atoms, origin = origin, target=target, atom_id=atom_id)
+
+  #interleave
+  browser()
+  rgl::open3d()
+
+  points3d(x=atoms$x, y =atoms$y, z=atoms$z)
+  segm
+}
