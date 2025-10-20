@@ -12,6 +12,7 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
+
 ```
 
 ```{r setup}
@@ -23,61 +24,13 @@ library(lattice)
 library(ggplot2)
 library(dplyr)
 library(rgl)
+library(chemviewR)
+library(trans)
+setupKnitr()
 ```
 
 
 ## Loading data
-
-```{r}
-
-# Read data
-path_benzene_mol2 <- system.file(package="bondy", "benzene.mol2") 
-
-# Bio3d mol2 file
-benzene <- bio3d::read.mol2(path_benzene_mol2)
-benzene_coords <- matrix(benzene$xyz, ncol = 3, byrow = TRUE)
-
-
-# lattice::cloud(x ~ y * z,data = benzene$atom, )
-df_bonds <- enrich_bonds_with_xyz_position(bonds = benzene$bond, atoms = benzene$atom)
-benzene$atom |>
-  ggplot() + 
-  geom_segment(data = df_bonds, mapping = aes(x=x, y=y, xend = xend, yend = yend, linetype = type), colour = "black") +
-  geom_point(aes(x=x, y=y, colour = elena), size = 5) +
-  geom_text(aes(x=x, y=y, label = elena)) +
-  scale_linetype_manual(values = c("ar" = 1, "1" = 2)) + 
-  scale_colour_brewer(palette = "Set2") +
-  coord_fixed() +
-  theme_void() +
-  theme(legend.position = "none")
-
-library(rgl)
-
-open3d()
-spheres3d(x = benzene$atom$x, y=benzene$atom$y, z=benzene$atom$z, col = ifelse(benzene$atom$elena == "H", "red", "blue"),
-  type = 's',
-  radius = .1)
-
-segments3d(x = c(0, 2), y=c(0,2), z=c(0, 2), add=TRUE)
-# 
-#   box=FALSE, axes=FALSE, xlab="", ylab="", zlab="",
-# 
-# rgl::plot3d(x = benzene$atom$x, y=benzene$atom$y, z=benzene$atom$z, col = ifelse(benzene$atom$elena == "H", "red", "blue"),
-#   type = 's',
-#   radius = .1,
-#   box=FALSE, axes=FALSE, xlab="", ylab="", zlab="",
-# )
-```
-
-Visualise with raymolecule
-```{r}
-# library(rayrender)
-# path_benzene_sdf <- system.file(package="bondy", "benzene.sdf")
-# benzene_sdf <- raymolecule::read_sdf(path_benzene_sdf)
-# benzene_sdf |>
-#   generate_full_scene() |> 
-#   render_model(width=800,height=800,samples=1000, clamp_value=10)
-```
 
 ```{r}
 path_fe_tri <- system.file(package = "bondy", "fe_tripod.mol2")
@@ -87,6 +40,7 @@ fe_tri <- read.mol2(path_fe_tri)
 pd <-  read.mol2(path_pd)
 ```
 
+## Define coordinate system
 Step1: define coordinate symmetry that describes o symmetry
 ```{r}
 cube_corners <- data.frame(
@@ -101,49 +55,110 @@ cube_face <- data.frame(
   z = c(0, 0, 0, 0, 1, -1)
 )
 
-rgl::plot3d(cube_corners, type="s", box=FALSE, axes=TRUE, xlab="", ylab="", zlab="")
-points3d(cube_face, col="red")
+# C3 axis vector (top right corner)
+c3 <- c(x=1, y=1, z=1)
+
+# C4 axis vector (line through center top and bottom face)
+c4 <- c(x=0, y=0, z=1)
+
+c45_3d <- function(){
+  rgl::abclines3d(x=c(0, 0, 0), a=c3, color = "gold", lit=FALSE)
+  rgl::abclines3d(x=c(0, 0, 0), a=c4, color = "purple", lit=FALSE)
+}
+
+c34_plane <- trans::compute_plane_normal_from_vectors(c3, c4)
+# magnitude(c3)
+# magnitude(c4)
+# rgl::plot3d(cube_corners, type="s", box=FALSE, axes=TRUE, xlab="", ylab="", zlab="")
+rgl::clear3d()
+rgl::open3d()
+points3d(cube_corners, lit=FALSE, color="black", size=10)
+rgl::wire3d(rgl::cube3d(), color = "red", lit=FALSE)
+rgl::points3d(cube_face, col="red")
+rgl::abclines3d(x=c(0, 0, 0), a=c3, color = "gold", lit=FALSE)
+rgl::abclines3d(x=c(0, 0, 0), a=c4, color = "purple", lit=FALSE)
+rgl::arrow3d(c(0, 0, 0), c3, color = "gold", lit=FALSE, type = "rotation", width=0.1)
+rgl::arrow3d(c(0, 0, 0), c4, color = "purple", lit=FALSE, type = "rotation", width=0.1)
+# rgl::planes3d(c(0, 0, 1))
+# rgl::planes3d(a=zapsmall(c34_plane["x"]), b=zapsmall(c34_plane["y"]), c=zapsmall(c34_plane["z"]), d=0, lit=FALSE, colour="black")
+# rgl::arrow3d(p0 = c(0, 0, 0), p1 = c34_plane)
+axes3d()
+rglwidget()
 ```
 
-Step2:  Import mol and choose 'bonding atoms' (based on element number)
+Step2:  Import mol and choose 'bonding atoms' (based on element number) - then use center of bonding atom positions as anchor to recenter.
+
 ```{r}
 df_tri_atom <- dplyr::as_tibble(fe_tri$atom)
+df_tri_bonds <- dplyr::as_tibble(fe_tri$bond)
 
-#USER PARAM
+#USER PARAM (atoms of interest: bonding atoms (triple nitrogen) & 'special' test atom (iron)
 # bonding_atoms = c("N5;21", "N5", "N5")
 df_tri_atom[df_tri_atom$elena=="N5",]
 bonding_atom_numbers <- c(6, 32, 58)
 
-## Average the X Y Z
-df_tri_atom |> 
-  dplyr::filter(eleno %in% bonding_atom_numbers) |>
-  dplyr::mutate(across(c(x, y, z), mean, .names = "avg_{.col}")) |>
-  dplyr::relocate(.after = z, dplyr::starts_with("avg_"))
-
-df_avg_pos <- df_tri_atom |> 
-  dplyr::filter(eleno %in% bonding_atom_numbers) |>
-  dplyr::summarise(across(c(x, y, z), mean, .names = "avg_{.col}"))
-  
-df_tri_atom_recentered <- df_tri_atom |>
-  mutate(
-    x = x - df_avg_pos$avg_x,
-    y = y - df_avg_pos$avg_y,
-    z = z - df_avg_pos$avg_z,
-  )
-
-rgl::plot3d(cube_corners, type="s", box=FALSE, axes=TRUE, xlab="", ylab="", zlab="")
-points3d(cube_face, col="red")
-with(df_tri_atom_recentered, points3d(x, y, z, col="pink"))
-
-```
-
-Step3: Aligning the Iron to the symmetry axis
-
-```{r}
-## Placeholder we'll go back
 testelement = "Fe1"
 testelementno = 1
 
+# Locate the centre of our bonding atom positions
+bonding_atom_center_orig <- df_tri_atom |>
+  dplyr::filter(eleno %in% bonding_atom_numbers) |>
+  trans::locate_center()
+
+df_tri_atom_recentered <- df_tri_atom |>
+  mutate(
+    x = x - bonding_atom_center_orig[["x"]],
+    y = y - bonding_atom_center_orig[["y"]],
+    z = z - bonding_atom_center_orig[["z"]],
+  )
+
+# Compute center of bonding atoms
+bonding_atom_center <- df_tri_atom_recentered |>
+   dplyr::filter(eleno %in% bonding_atom_numbers) |>
+    trans::locate_center()
+
+# Create segments to rotated center
+segments_to_center <- df_tri_atom_recentered |>
+   dplyr::filter(eleno %in% bonding_atom_numbers) |>
+   dplyr::mutate(
+     xend = bonding_atom_center["x"],
+     yend = bonding_atom_center["y"],
+     zend = bonding_atom_center["z"],
+     ) |>
+  trans::convert_tidy_segments_to_interleaved()
+
+# Create segment from
+segments_to_center_special_orig <- df_tri_atom_recentered |>
+  dplyr::filter(eleno == testelementno) |>
+  dplyr::mutate(xend = 0, yend = 0, zend=0) |>
+  trans::convert_tidy_segments_to_interleaved()
+
+# Visualise
+plotrgl(
+  atoms = df_tri_atom_recentered, 
+  bonds = df_tri_bonds, 
+  clear_scene = TRUE, 
+  axes = FALSE, 
+  highlight = bonding_atom_numbers, 
+  highlight_colour = "green"
+)
+rgl::wire3d(rgl::cube3d(), color = "red", lit=FALSE)
+points3d(cube_face, col="red")
+spheres3d(cube_corners, color = "pink", radius=0.1)
+points3d(bonding_atom_center, color = "purple", lit=FALSE)
+with(segments_to_center, rgl::segments3d(x, y, z, lit=FALSE, color = "green"))
+with(segments_to_center_special_orig, rgl::segments3d(x, y, z, lit=FALSE, color = "orange"))
+# axes3d(lit=FALSE, color="white") 
+rglwidget()
+
+```
+
+Step3: Aligning the Iron to the (c3) symmetry axis
+
+We need to ensure vector spanning from the center of the binding atoms (triple nitrogen) to our special atom (Iron) aligns to the c3 axis (center of cube to top right corner).
+
+
+```{r}
 df_tri_atom_recentered
 
 # Rotate iron atom to point at top right corner
@@ -167,46 +182,356 @@ df_tri_atom_recentered_rotated <- dplyr::bind_cols(
 
 df_tri_atom_recentered_rotated 
 
-rgl::plot3d(cube_corners, type="s", box=FALSE, axes=TRUE, xlab="", ylab="", zlab="")
-points3d(cube_face, col="purple", add=TRUE)
-with(df_tri_atom_recentered_rotated, points3d(x, y, z, col="red", add=TRUE))
+# Recompute  Segments to center for rotated atom
+segments_to_center_rotated <- df_tri_atom_recentered_rotated |>
+   dplyr::filter(eleno %in% bonding_atom_numbers) |>
+   dplyr::mutate(
+     xend = bonding_atom_center["x"],
+     yend = bonding_atom_center["y"],
+     zend = bonding_atom_center["z"],
+     ) |>
+  trans::convert_tidy_segments_to_interleaved()
 
+# Compute segment between special testing atom (iron) and the zero position. Line should fall along the c4 axis.
+segments_to_center_special <- df_tri_atom_recentered_rotated |>
+  dplyr::filter(eleno == testelementno) |>
+  dplyr::mutate(xend = 0, yend = 0, zend=0) |>
+  trans::convert_tidy_segments_to_interleaved()
+  
+  
+
+# rgl::plot3d(cube_corners, type="s", box=FALSE, axes=TRUE, xlab="", ylab="", zlab="")
+# points3d(cube_face, col="purple", add=TRUE)
+# with(df_tri_atom_recentered_rotated, points3d(x, y, z, col="red", add=TRUE))
+
+plotrgl(
+  atoms = df_tri_atom_recentered_rotated, 
+  bonds = df_tri_bonds, 
+  clear_scene = TRUE, 
+  axes = FALSE, 
+  highlight = bonding_atom_numbers, 
+  highlight_colour = "green"
+)
+rgl::arrow3d(p0 = c(0, 0, 0), p1 = target, lit=FALSE, color="white", type="rotation")
+rgl::wire3d(rgl::cube3d(), color = "red", lit=FALSE)
+points3d(cube_face, col="red")
+spheres3d(cube_corners, color = "pink", radius=0.1)
+with(segments_to_center_rotated, rgl::segments3d(x, y, z, lit=FALSE, color = "green"))
+with(segments_to_center_special, rgl::segments3d(x, y, z, lit=FALSE, color = "orange"))
+rgl::planes3d(c34_plane, lit=FALSE, color="pink", alpha = 0.5)
+c45_3d()
+# points3d(bonding_atom_center, color = "purple", lit=FALSE)
+rglwidget()
 ```
+
 
 Step 4: rotate bonding atom (first n5) into plane spanned by C3 & C4
 
 ```{r}
-v
-plane_normal <- c(0, 1, -1)
-plane_normal_norm <- normalise(plane_normal)
+# v
+# plane_normal <- c(0, 1, -1)
+# plane_normal_norm <- trans::normalise(plane_normal)
+c34_plane
+
+target_binding_atom_no <- df_tri_atom_recentered_rotated |>
+  dplyr::filter(eleno %in% bonding_atom_numbers) |> 
+  slice_min(order_by = eleno, n = 1) |>
+  pull(eleno)
 
 # Pick one of the n5 atoms
 v <- df_tri_atom_recentered_rotated |>
-  dplyr::filter(eleno %in% bonding_atom_numbers) |> 
-  slice_min(order_by = eleno, n = 1) |>
+  dplyr::filter(eleno == target_binding_atom_no) |> 
   select(x,y,z) |>
   unlist()
 
-# Find paramaters to rotate v into plane_normal
-params2 <- rotate_vector_into_a_plane(v, plane_normal)
+# Find paramaters to rotate one of the binding atoms into plane_normal
+params2 <- trans::rotate_vector_into_a_plane(v, c34_plane, return = "axis_plus_angle")
 
 # Apply that rotation to all the atoms
-new_positions2 <- purrr::pmap_dfr(df_tri_atom_recentered_rotated[c("x", "y", "z")], .f = \(x, y, z){
-  vec = rotate_vector_around_axis(v = c(x, y, z), rotation_axis = params2$axis, angle = params2$angle)
-  names(vec) <- c("x", "y", "z")
-  return(vec)
-})
+df_tri_atom_plane <- trans::apply_tranformation_to_table(
+  df_tri_atom_recentered_rotated, f = function(vec){ 
+    trans::rotate_vector_around_axis(v = vec, rotation_axis = params2$axis, angle = params2$angle)
+  })
+
+
+# new_positions2 <- purrr::pmap_dfr(df_tri_atom_recentered_rotated[c("x", "y", "z")], .f = \(x, y, z){
+#   vec = rotate_vector_around_axis(v = c(x, y, z), rotation_axis = params2$axis, angle = params2$angle)
+#   names(vec) <- c("x", "y", "z")
+#   return(vec)
+# })
 
 df_tri_atom_plane <- dplyr::bind_cols(
   df_tri_atom_recentered_rotated[c("eleno", "elena", "elety")], new_positions2
 )
 
+# 
+# v_after_tri <- df_tri_atom_plane |>
+#   filter(eleno == target_binding_atom_no) |>
+#   select(x, y, z) |>
+#   unlist()
 
-rgl::plot3d(cube_corners, type="s", box=FALSE, axes=TRUE, xlab="", ylab="", zlab="")
-points3d(cube_face, col="purple", add=TRUE)
-with(df_tri_atom_plane, points3d(x, y, z, col="red", add=TRUE))
+# Compute segment between special testing atom (iron) and the zero position. Line should fall along the c4 axis.
+segments_to_center_3 <- df_tri_atom_plane |>
+  dplyr::filter(eleno %in% bonding_atom_numbers) |>
+  dplyr::mutate(xend = 0, yend = 0, zend=0) |>
+  trans::convert_tidy_segments_to_interleaved()
+
+# v_rotated = rotate_vector_around_axis_bondy(v=v_after_tri, rotation_axis = normalise(c3), angle = degrees_to_radians(45))
+
+plotrgl(
+  atoms = df_tri_atom_plane, 
+  bonds = df_tri_bonds, 
+  clear_scene = TRUE, 
+  axes = FALSE, 
+  highlight = bonding_atom_numbers, 
+  highlight_colour = "green"
+)
+rgl::arrow3d(p0 = c(0, 0, 0), p1 = target, lit=FALSE, color="white", type="rotation")
+rgl::wire3d(rgl::cube3d(), color = "red", lit=FALSE)
+rgl::planes3d(c34_plane, lit=FALSE, color="pink", alpha = 0.2)
+points3d(cube_face, col="red")
+with(segments_to_center_3, rgl::segments3d(x, y, z, lit=FALSE, color = "green"))
+# spheres3d(v_rotated, radius = 0.5, color = "darkgreen")
+spheres3d(cube_corners, color = "pink", radius=0.1)
+# arrow3d(p0 = c(0, 0, 0), p1 = v_after_tri, color="blue", lit=FALSE)
+# arrow3d(p0 = c(0, 0, 0), p1 = c3, color="purple", lit=FALSE)
+# arrow3d(p0 = c(0, 0, 0), p1 = v_rotated, color="red", lit=FALSE)
+c45_3d()
 
 
+
+
+rglwidget()
 # Split v into 
 ```
+
+Step 6: Rotate/slide along C3 axis (topright corner) by phi / s respectively
+
+```{r}
+rotate_by_phi <- function(data, phi, c3vec){ #Phi should be in degrees
+  df_atom_phirotated <- apply_tranformation_to_table(data, f = \(pos) {rotate_vector_around_axis_bondy(v = pos, rotation_axis = c3vec, angle = degrees_to_radians(phi))})
+  return(df_atom_phirotated)
+}
+
+slide_by_s <- function(data, s, c3vec){ #Phi should be in degrees
+  df_atom_slid <- apply_tranformation_to_table(data, f = \(pos) {trans::translate_position_in_direction(pos, direction = c3vec, magnitude = s)})
+  return(df_atom_slid)
+}
+
+
+# Phi is in degrees
+c3_transform <- function(data, c3vec, s, phi){
+  rotated <- rotate_by_phi(data=data, phi=phi, c3vec=c3vec)
+  slid <- slide_by_s(data=rotated, s=s, c3vec=c3vec)
+  return(slid)
+}
+
+df_atom_c3transformed <- c3_transform(df_tri_atom_plane, c3vec = c3, s=0, phi = 60)
+
+
+plotrgl(
+  atoms = df_atom_c3transformed, 
+  bonds = df_tri_bonds, 
+  clear_scene = TRUE, 
+  axes = FALSE, 
+  highlight = bonding_atom_numbers, 
+  highlight_colour = "green"
+)
+rgl::arrow3d(p0 = c(0, 0, 0), p1 = target, lit=FALSE, color="white", type="rotation")
+rgl::wire3d(rgl::cube3d(), color = "red", lit=FALSE)
+rgl::planes3d(c34_plane, lit=FALSE, color="pink", alpha = 0.2)
+points3d(cube_face, col="red")
+# with(segments_to_center_3, rgl::segments3d(x, y, z, lit=FALSE, color = "green"))
+# spheres3d(v_rotated, radius = 0.5, color = "darkgreen")
+spheres3d(cube_corners, color = "pink", radius=0.1)
+# arrow3d(p0 = c(0, 0, 0), p1 = v_after_tri, color="blue", lit=FALSE)
+# arrow3d(p0 = c(0, 0, 0), p1 = c3, color="purple", lit=FALSE)
+# arrow3d(p0 = c(0, 0, 0), p1 = v_rotated, color="red", lit=FALSE)
+c45_3d()
+rglwidget()
+```
+
+
+## Add in Palladium 
+
+We're trying to guess how the tripod will bind to its complementary subunit. 
+
+To do that, we need to define what the likely bonding vectors from the bonding atoms are. (vectors from bonding atoms to palladium). Each nitrogen is connected to a single palladium by the exact same bond vector.
+
+To find this bond vector, we need to guess
+1) bond length
+2) bond angle,
+3) torsion angle.
+
+Correctness of bond vector is hard to test - so we will rely on chemists inputting sensible guesses.
+
+
+```{r}
+## Add dummy atom to binding atom (nitrogen).  
+## For this we need the bond vector of fe_tripod dummy atom. 
+# Step1 ask user for the following info. 
+bond_length = 1.987
+bond_angle = 121.05
+torsion_angle = 176.88
+atom_ids_abc = c(6, 27, 21) # The Ids of atoms a, b and c from an a-b-c-d bond chain where d is our dummy atom, c is the binding atom (b) and a and be are two connecting atoms. bond angle represents angle between b-c and c-d. torsion angle represents the angle from d to a around axis b-c. bond length represents magnitude of vector C-D.
+
+df_abc_positions <- fetch_atom_positions(df_tri_atom_plane, atom_ids = atom_ids_abc)
+bonding_position <- compas::calCo(prev_atoms = as.matrix(df_abc_positions), length = bond_length, bAngle = bond_angle, tAngle= torsion_angle)
+
+bonding_position
+
+# Plot
+plotrgl(
+  atoms = df_tri_atom_plane, 
+  bonds = df_tri_bonds, 
+  clear_scene = TRUE, 
+  axes = FALSE, 
+  highlight = bonding_atom_numbers,
+  highlight_colour = "green"
+  # highlight = atom_ids_abc,
+  # highlight_colour = "orange"
+)
+with(df_tri_atom_plane, rgl::texts3d(x, y, z, texts = eleno, adj = c(0, 1, 0), color="white"))
+rgl::arrow3d(p0 = df_abc_positions[3,], p1 = bonding_position, lit=FALSE, color="white", type="rotation")
+rgl::wire3d(rgl::cube3d(), color = "red", lit=FALSE)
+rgl::planes3d(c34_plane, lit=FALSE, color="pink", alpha = 0.2)
+points3d(cube_face, col="red")
+spheres3d(cube_corners, color = "pink", radius=0.1)
+c45_3d()
+rglwidget()
+
+# nitrogen_bonding_vector <- guess_bonding_vector(bond_length = 1.987, bond_angle = 121.05, torsion_angle = 176.88)
+```
+
+```{r}
+pd_atoms <- pd$atom
+pd_bonds <- pd$bond
+
+# Translate PD atom to bonding vector
+
+plotrgl(
+  atoms = df_tri_atom_plane, 
+  bonds = df_tri_bonds, 
+  clear_scene = TRUE, 
+  axes = FALSE, 
+  highlight = bonding_atom_numbers, 
+  highlight_colour = "green"
+)
+rgl::arrow3d(p0 = v_after_tri, p1 = v_after_tri + nitrogen_bonding_vector, type = "rotation", color="green")
+# plotrgl(
+#   atoms = pd_atoms, 
+#   bonds = pd_bonds, 
+#   clear_scene = TRUE, 
+#   axes = FALSE, 
+#   highlight = bonding_atom_numbers, 
+#   highlight_colour = "green", 
+# )
+rgl::arrow3d(p0 = c(0, 0, 0), p1 = target, lit=FALSE, color="white", type="rotation")
+rgl::wire3d(rgl::cube3d(), color = "red", lit=FALSE)
+rgl::planes3d(c34_plane, lit=FALSE, color="pink", alpha = 0.2)
+points3d(cube_face, col="red")
+spheres3d(cube_corners, color = "pink", radius=0.1)
+c45_3d()
+rglwidget()
+```
+
+
+Calculate bond vector from mol2 file
+
+```{r}
+getatompos <- function(data, abc_atom_ids){
+  data |>
+    dplyr::filter(eleno == abc_atom_ids) |>
+    dplyr::select(x, y, z) |>
+    unlist()
+}
+
+path_test <- system.file(package = "bondy", "test_thingy.mol2")
+test_mol2 <- bio3d::read.mol2(path_test)
+df_test_atoms <- test_mol2$atom
+df_test_bonds <- test_mol2$bond
+
+atom_no_1 = 7
+atom_no_2 = 1
+pos1 = df_test_atoms |>
+  dplyr::filter(eleno == atom_no_1) |>
+  dplyr::select(x, y, z) |>
+  unlist()
+
+pos2 = df_test_atoms |>
+  dplyr::filter(eleno == atom_no_2) |>
+  dplyr::select(x, y, z) |>
+  unlist()
+
+bond_vector = pos2-pos1
+c(x = 1.07089999999999, y = 0.00189999999999912, z = 1.6736)
+
+# Get Position of ABC atoms
+abc_atom_ids <- list(a=22, b=28, c=7)
+
+abc_atoms_positions <- list(
+  a = getatompos(df_test_atoms, 22),
+  b = getatompos(df_test_atoms, 28),
+  c = getatompos(df_test_atoms, 7)
+  )
+
+plotrgl(
+  atoms = df_test_atoms, 
+  bonds = df_test_bonds, 
+  clear_scene = TRUE, 
+  axes = FALSE, 
+  highlight = 1, 
+  highlight_colour = "gold"
+)
+rgl::arrow3d(p0 = pos1, p1 = pos1 + bond_vector, lit=FALSE, color="green", type="rotation")
+with(df_test_atoms,rgl::text3d(x +0.5, y, z,  texts = eleno, lit=FALSE, color="green"))
+# rgl::wire3d(rgl::cube3d(), color = "red", lit=FALSE)
+# rgl::planes3d(c34_plane, lit=FALSE, color="pink", alpha = 0.2)
+# points3d(cube_face, col="red")
+# spheres3d(cube_corners, color = "pink", radius=0.1)
+# c45_3d()
+rglwidget()
+```
+
+```{r}
+
+```
+
+
+```{r}
+atom_pos <- abc_atoms_positions |> bind_rows() 
+rownames(atom_pos) <- names(abc_atoms_positions)
+new_position <- compas::calCo(prev_atoms = as.matrix(atom_pos), length = 1.987, bAngle = 121.05, tAngle= 176.88)
+
+
+# # D-i-j-k
+# new_position <- place_dummy_from_zmatrix(coords = df_test_atoms, i = 7, j = 28, k = 22, theta = 121.05, phi = 176.88, r = 1.987)
+
+plotrgl(
+  atoms = df_test_atoms, 
+  bonds = df_test_bonds, 
+  clear_scene = TRUE, 
+  axes = FALSE, 
+  highlight = 1, 
+  highlight_colour = "gold"
+)
+rgl::arrow3d(p0 = pos1, p1 = new_position, lit=FALSE, color="green", type="rotation")
+with(df_test_atoms,rgl::text3d(x +0.5, y, z,  texts = eleno, lit=FALSE, color="green"))
+# rgl::wire3d(rgl::cube3d(), color = "red", lit=FALSE)
+# rgl::planes3d(c34_plane, lit=FALSE, color="pink", alpha = 0.2)
+# points3d(cube_face, col="red")
+# spheres3d(cube_corners, color = "pink", radius=0.1)
+# c45_3d()
+rglwidget()
+# bond_length = 1.987, bond_angle = 121.05, torsion_angle = 176.88
+```
+
+1. Spawn palladiam in origin (on c4 axis) (e.g. on origin of cube). Add dummy atoms at 90-degree angles to C4 axis - ask user to supply one bond vector then rotate by 90 degrees 4 times around C4 axis to get the others. 
+
+Then add ability to slide up and down / rotate around C4 axis. 
+Add functions to measure distance between 1 pair of molecules (e.g. 1 C4 dummy + 1 nitrogen). Sweep over C4 and C3 rotations to minimise distance between C4 dummy - nitrogen. & if minima is small enough - report as geometrically sensible structure.
+
+Take C4 and C5 phi and S, create 1 combo molecule of Palladium + tripod. Rotate around the C3 3 times (120 degrees each time) then rotate around one of the C4s 4 times by 90 degrees and rotate that whole thing around perpendicular C4 by 180 degrees to give other half of the cube.
+
+
 

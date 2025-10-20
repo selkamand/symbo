@@ -50,7 +50,5 @@ pointsymmetry(mol1, mol2)
 
 # O symmetry
 setting_symm
-
-
 ```
 
