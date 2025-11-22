@@ -2,5 +2,6 @@
 
 export(OptimisationResult)
 export(OptimisationResultCollection)
+export(create_summary_report)
 export(get_assessable_shapeclasses)
 export(screen_molecules)

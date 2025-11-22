@@ -165,7 +165,11 @@ screen_molecules <- function(molecule1, molecule2,
     return(optimisation)
   })
 
-  OptimisationResultCollection(optimisations = ls_optimisations)
+  OptimisationResultCollection(
+    optimisations = ls_optimisations,
+    mol1_not_optimised = molecule1,
+    mol2_not_optimised = molecule2
+  )
 }
 
 
@@ -332,6 +336,9 @@ axes_to_shapeclass_reference <- function(){
   return(df)
 }
 
+list_all_shapeclasses <- function(){
+  axes_to_shapeclass_reference()[["ShapeClass"]]
+}
 
 
 #' Get assessable polyhedral geometries from symmetry axis orders

@@ -1,0 +1,128 @@
+---
+title: "Bondy Report"
+output: 
+  html_document:
+    theme: cosmo
+    toc: true
+    toc_float: true
+params:
+  collection: NULL
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+options(rgl.useNULL=TRUE)
+
+# Collection should be a bondy::OptimisationResultCollection() object
+collection <- params$collection
+
+mol1_not_optimised <- collection@mol1_not_optimised
+mol2_not_optimised <- collection@mol2_not_optimised
+
+mol1_name = mol1_not_optimised@name
+mol2_name = mol2_not_optimised@name
+```
+
+## Inputs
+
+```{r}
+htmltools::p("User supplied two input molecules: ", htmltools::strong(mol1_name), " (left) and ", htmltools::strong(mol2_name), " (right)")
+```
+
+
+```{r fig.height=3, fig.width=8}
+
+rgl::layout3d(matrix(1:2, ncol=2))
+chemviewR::plot_molecule(collection@mol1_not_optimised, clear_scene = FALSE); rgl::next3d();
+chemviewR::plot_molecule(collection@mol2_not_optimised, clear_scene = FALSE)
+# rgl::points3d(molecule2_plane$centroid + molecule2_plane$normal*10)
+# rgl::points3d(molecule2_plane$centroid- molecule2_plane$normal*10)
+rgl::rglwidget()
+```
+
+### Symmetry Axes
+```{r}
+mol1_Cstring = toString(paste0("C", mol1_not_optimised@symmetry_elements@unique_proper_axis_orders))
+mol2_Cstring = toString(paste0("C", mol2_not_optimised@symmetry_elements@unique_proper_axis_orders))
+
+df = data.frame(
+  Molecule = c(mol1_name, mol2_name),
+  `Proper Rotation Axes` = c(mol1_Cstring, mol2_Cstring),
+  check.names = FALSE
+)
+reactable::reactable(
+  df,
+  highlight = TRUE, 
+  bordered = TRUE
+)
+
+```
+
+### Assessable Shape Classes
+
+```{r}
+shapeclasses = collection@shapeclasses
+all_shapeclasses <- axes_to_shapeclass_reference()
+df_assessable_shapeclasses <- all_shapeclasses[all_shapeclasses$ShapeClass %in% shapeclasses, , drop=FALSE]
+df_assessable_shapeclasses$Axis1 <- paste0("C", df_assessable_shapeclasses$Axis1)
+df_assessable_shapeclasses$Axis2 <- paste0("C", df_assessable_shapeclasses$Axis2)
+
+reactable::reactable(
+  df_assessable_shapeclasses[c("ShapeClass", "Axis1", "Axis2")],
+  highlight = TRUE, 
+  bordered = TRUE
+)
+```
+
+## Optimisation
+
+### Summary 
+```{r}
+print(collection)
+```
+
+## Geometrically Optimal Structures
+
+```{r, results='asis'}
+for (optimisationresult in collection@optimisations){
+  print(htmltools::tagList(htmltools::h3(optimisationresult@shapeclass)))
+  print(htmltools::tagList({  
+    mol1 = optimisationresult@mol1
+    mol2 = optimisationresult@mol2
+    chemviewR::plot_molecule(mol1)
+    chemviewR::plot_molecule(mol2, clear_scene = FALSE)
+    rgl::rglwidget(width = 800, height = 400)
+  }))
+  print(htmltools::tagList(
+    reactable::reactable(
+      get_optimistation_stats(optimisationresult),
+      bordered = TRUE,
+      highlight = TRUE
+  )))
+}
+```
+
+
+## Supplementary Information
+
+### Full Report
+
+```{r}
+df_optimisations <- as.data.frame(collection)
+reactable::reactable(
+  df_optimisations,
+  bordered = TRUE,
+  highlight = TRUE
+)
+```
+
+### List of All Shape Classes
+
+```{r}
+reactable::reactable(
+  axes_to_shapeclass_reference(),
+  bordered = TRUE,
+  highlight = TRUE
+)
+```
+
