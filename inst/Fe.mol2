@@ -1,0 +1,17 @@
+@<TRIPOS>MOLECULE
+shelxl
+     1     0     1     0     1
+SMALL
+NO_CHARGES
+****
+Generated from the CSD - Crystal connectivity not present
+
+@<TRIPOS>ATOM
+     1 Fe1      5.0939   5.0939   5.0939   Fe        1 RES1   0.0000
+@<TRIPOS>SUBSTRUCTURE
+     1 RES1        1 GROUP             0 ****  ****    0  
+@<TRIPOS>SET
+CCDC_METAL STATIC ATOMS
+1 1 
+@<TRIPOS>CRYSIN
+   21.7400   21.7400   21.7400   90.0000   90.0000   90.0000   197     1

@@ -1,0 +1,11 @@
+@<TRIPOS>MOLECULE
+*****
+ 3 0 0 0 0
+SMALL
+GASTEIGER
+
+@<TRIPOS>ATOM
+      1 ZN          0.0003   -0.0002    1.0503 Zn      1  UNL1        0.0000
+      2 *          -1.4690    0.0772   -0.3600 Du     2  UNL2        0.0000
+      3 *           1.4693   -0.0773   -0.3604 Du     3  UNL3        0.0000
+@<TRIPOS>BOND

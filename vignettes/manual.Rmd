@@ -1,0 +1,341 @@
+---
+title: "manual"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{manual}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(bondy)
+library(rgl)
+library(chemviewR)
+library(move)
+library(structures)
+setupKnitr()
+```
+## Read Data Using the Structures Package
+
+```{r}
+path_fe_tri <- system.file(package = "bondy", "fe_tripod_dummies.mol2")
+path_pd <- system.file(package = "bondy", "pd.mol2")
+
+fe_tri <- read_mol2(path_fe_tri)
+pd <-  read_mol2(path_pd)
+```
+
+## Visualise Atom structure + labels side by side
+Side by side Labels vs no labels
+```{r}
+clear3d()
+layout3d(matrix(1:3, nrow = 1), sharedMouse = TRUE)
+# plot_molecule(fe_tri, label_mode = "none", clear_scene = FALSE, highlight = bonding_atom_ids, highlight_colour = "green")
+plot_molecule(fe_tri, label_mode = "none",clear_scene = FALSE, show_anchor = FALSE)
+# plot_c34_helpers(c3=c3, c4=c4)
+rgl::next3d()
+# plot_molecule(pd, label_mode = "none", label = "element", label_colour = NULL, clear_scene = FALSE)
+plot_molecule(fe_tri, label_mode = "no_atoms", label = "element", label_colour = NULL, clear_scene = FALSE, label_bonds = FALSE)
+rgl::next3d()
+plot_molecule(fe_tri, label_mode = "none", label_colour = NULL, clear_scene = FALSE, label_bonds = TRUE)
+# plot_c34_helpers(c3=c3, c4=c4)
+rglwidget()
+```
+
+
+## Align to the c34 axis
+
+```{r}
+# Define C3 and C4 axes
+c3 <- c(x=1, y=1, z=1) # C3 axis vector (top right corner)
+c4 <- c(x=0, y=0, z=1) # C4 axis vector (line through center top and bottom face)
+
+# Define elements of interest
+bonding_atom_ids <- c(6, 32, 58) # 3 Nitrogens
+special_atom_id <- 1  # Iron (Fe)
+
+# Define Dummy atom position (where 
+bond_length = 1.98689893552742
+bond_angle = 121.214624525835
+torsion_angle = 175.336290496186
+
+atom_ids_abc = c(25, 23, 6)
+
+fe_tri_c34aligned <- align_molecule_to_c3_and_c4(
+  fe_tri, 
+  bonding_atom_ids = bonding_atom_ids,
+  special_atom_id = special_atom_id, 
+  c3_axis = c3, 
+  c4_axis = c4
+)
+
+
+# Add dummy atom
+fe_tri_c34aligned_d <- add_dummy_atom(
+  fe_tri_c34aligned, 
+  atom_id_a = atom_ids_abc[1], 
+  atom_id_b = atom_ids_abc[2], 
+  atom_id_c = atom_ids_abc[3], bond_length = bond_length,
+  bond_angle = bond_angle,
+  torsion_angle = torsion_angle
+)
+mol1_dummy_atom_id <- 81
+```
+
+
+
+
+## Visualise Results
+
+With dummy atom in red
+
+```{r}
+plot_molecule(fe_tri_c34aligned_d, label_mode = "none",clear_scene = TRUE, highlight = bonding_atom_ids, highlight_colour = "green", show_anchor = TRUE, colour_map_atom = pal_bondy())
+plot_c34_helpers(c3=c3, c4=c4)
+rglwidget()
+```
+
+
+
+```{r}
+c4_anchor_atom_id = 1
+pd_c4aligned <- prepare_c4_molecule(molecule = pd, anchor_atom = c4_anchor_atom_id, dummy_bond_vector = c(2, 0, -0.1), n_dummies = 4, c4_axis = c4) 
+plot_molecule(pd_c4aligned, clear_scene = TRUE, colour_map_atom = pal_bondy())
+plot_c34_helpers(c3 = c3, c4 = c4)
+rglwidget()
+```
+
+## Combine our two molecules
+```{r}
+# c34_phi = 0
+plot_molecule(fe_tri_c34aligned_d, clear_scene = TRUE, highlight = bonding_atom_ids, highlight_colour = "green", colour_map_atom = pal_bondy())
+plot_molecule(pd_c4aligned, clear_scene = FALSE, add_light = FALSE, colour_map_atom = pal_bondy())
+plot_c34_helpers(c3 = c3, c4=c4)
+rglwidget()
+```
+
+
+## Find Optimal phi and s along c3 and c4 axis 
+
+```{r}
+
+# Run Optimisation
+optimised <- find_optimal_phi_and_c3(c3_molecule = fe_tri_c34aligned_d, c4_molecule = pd_c4aligned, c3_atom_id = bonding_atom_ids[1], c4_atom_id = secondary_anchor_atom_id, phi_c3 = phi_c3, s_c3 = s_c3, phi_c4 = phi_c4, s_c4 = s_c4, c3_axis = c3, c4_axis = c4, dummy_elena = "Du", max_s = 100)
+
+print(optimised)
+optpar <- optimised$par
+minimal_distance = optimised$value
+
+# Apply Optimal Transformation
+fe_tri_c34aligned_d_optimal <- slide_and_rotate(molecule = fe_tri_c34aligned_d, phi = optpar[1], s = optpar[2], axis=c3)
+pd_c4aligned_optimal <- slide_and_rotate(molecule = pd_c4aligned, phi = optpar[3], s = optpar[4], axis=c4)
+
+# Visualise Unoptimised Vs Optimised Molecules
+rgl::clear3d()
+rgl::layout3d(matrix(1:2, nrow = 1), sharedMouse = FALSE)
+plot_molecule(fe_tri_c34aligned_d, clear_scene = FALSE, highlight = bonding_atom_ids, highlight_colour = "green", colour_map_atom = pal_bondy(), show_anchor = FALSE)
+plot_molecule(pd_c4aligned, clear_scene = FALSE, add_light = FALSE, colour_map_atom = pal_bondy(), show_anchor = TRUE)
+plot_c34_helpers(c3=c3, c4=c4)
+rgl::next3d()
+plot_molecule(fe_tri_c34aligned_d_optimal, clear_scene = FALSE, highlight = bonding_atom_ids, highlight_colour = "green", colour_map_atom = pal_bondy(), show_anchor = TRUE)
+plot_molecule(pd_c4aligned_optimal, clear_scene = FALSE, add_light = FALSE, colour_map_atom = pal_bondy(), show_anchor = TRUE)
+# rgl::spheres3d(x=0, y=0, z=8.152101, radius = 2, lit=FALSE, color = "orange")
+plot_c34_helpers(c3=c3, c4=c4)
+rgl::rglwidget()
+```
+
+
+## Combine into one object and rotate around to generate full structure
+Rotate each subunit (palladium vs fe tripod) on its own. Always rotate around c2,c3, or c4 axes. Never invert or mirror.
+
+
+## Move them about
+```{r}
+
+
+
+# fe_tri_c34aligned_d |>
+#   slide_and_rotate(s = 4, phi = 20, axis = c3) |>
+#   plot_molecule(highlight = bonding_atom_ids, highlight_colour = "green", colour_map_atom = pal_bondy(), show_anchor = TRUE)
+# plot_c34_helpers(c3 = c3, c4=c4)
+# rglwidget()
+#   
+
+# move_and_check(c3_molecule = fe_tri_c34aligned_d, c4_molecule = pd_c4aligned, c4_atom_id = 1, phi_c3 = , s_c3 = 5, phi_c4 = 20, s_c4 = 1,c3_axis = c3, c4_axis = c4)
+
+optimal_results <- optim(c(0, 0, 0, 0), fn = function(x){
+    phi_c3=x[1]
+    s_c3=x[2]
+    phi_c4=x[3]
+    s_c4=x[4]
+    move_and_check(c3_molecule = fe_tri_c34aligned_d, c4_molecule = pd_c4aligned, c4_atom_id = 1, phi_c3 = phi_c3, s_c3 = s_c3, phi_c4 = phi_c4, s_c4 = s_c4, c3_axis = c3, c4_axis = c4, dummy_elena = "Du")
+}, method = "SANN",  upper = c(360, 10, 360, 10), control=list(maxit=100000)); optimal_results
+
+optpar <- optimal_results$par
+phi_c3_optimal=optpar[1]
+s_c3_optimal=optpar[2]
+phi_c4_optimal=optpar[3]
+s_c4_optimal=optpar[4]
+
+
+
+
+
+move_and_check(c3_molecule = fe_tri_c34aligned_d, c4_molecule = pd_c4aligned, c4_atom_id = 1, phi_c3 = phi_c3_optimal, s_c3 = s_c3_optimal, phi_c4 = phi_c4_optimal, s_c4 = s_, c3_axis = c3, c4_axis = c3, dummy_elena = "Du")
+```
+
+
+## An example of face-capped tetrahedral symmetry
+
+```{r}
+path_ligand <- system.file(package = "bondy", "ligand.mol2")
+path_fe <- system.file(package = "bondy", "Fe.mol2")
+
+ligand <- read_mol2(path_ligand)
+fe <-  read_mol2(path_pd)
+
+bonding_atom_ids = c(2, 28, 54)
+special_atom_ids = c(77, 76, 51,50, 25, 24)
+
+tetrahedron <- symmetry_tetrahedron()
+
+centerpos <- ligand |>
+  structures::filter_atoms(eleno = bonding_atom_ids) |>
+  structures::locate_molecule_center()
+
+ligand_centered <- ligand |>
+  set_anchor_by_position(centerpos) |>
+  structures::translate_molecule_to_origin()
+
+special_atom_center <- ligand_centered |>
+  structures::filter_atoms(special_atom_ids) |>
+  structures::locate_molecule_center()
+
+params <- move::rotate_vector_to_align_with_target(special_atom_center, target = tetrahedron$c3_A_BCD, return = "axis_plus_angle")
+ligand_c3aligned <- structures::transform_molecule(ligand_centered, move::rotate_vector_around_axis,  rotation_axis = params$axis, angle = params$angle)
+```
+
+
+
+```{r}
+clear3d()
+layout3d(matrix(1:3, nrow = 1), sharedMouse = TRUE)
+# plot_molecule(fe_tri, label_mode = "none", clear_scene = FALSE, highlight = bonding_atom_ids, highlight_colour = "green")
+plot_molecule(ligand, label_mode = "none",clear_scene = FALSE, show_anchor = FALSE, highlight = special_atom_ids, highlight_colour = "green")
+# plot_c34_helpers(c3=c3, c4=c4)
+rgl::next3d()
+# plot_molecule(pd, label_mode = "none", label = "element", label_colour = NULL, clear_scene = FALSE)
+plot_molecule(ligand, label_mode = "no_atoms", label = "element", label_colour = NULL, clear_scene = FALSE, label_bonds = FALSE)
+rgl::next3d()
+plot_molecule(ligand, label_mode = "none", label_colour = NULL, clear_scene = FALSE, label_bonds = TRUE)
+# plot_c34_helpers(c3=c3, c4=c4)
+rglwidget()
+```
+
+```{r}
+# Visualise aligned:
+
+clear3d()
+
+# layout3d(matrix(1:3, nrow = 1), sharedMouse = TRUE)
+# plot_molecule(fe_tri, label_mode = "none", clear_scene = FALSE, highlight = bonding_atom_ids, highlight_colour = "green")
+plot_molecule(ligand_c3aligned, label_mode = "none",clear_scene = TRUE, show_anchor = TRUE, highlight = bonding_atom_ids, highlight_colour = "green")
+plot_tetrahedron_helpers()
+# plot_c34_helpers(c3=c3, c4=c4)
+# rgl::next3d()
+# # plot_molecule(pd, label_mode = "none", label = "element", label_colour = NULL, clear_scene = FALSE)
+# plot_molecule(ligand, label_mode = "no_atoms", label = "element", label_colour = NULL, clear_scene = FALSE, label_bonds = FALSE)
+# rgl::next3d()
+# plot_molecule(ligand, label_mode = "none", label_colour = NULL, clear_scene = FALSE, label_bonds = TRUE)
+# # plot_c34_helpers(c3=c3, c4=c4)
+rglwidget()
+```
+
+```{r}
+
+bond_angle = 129.610437020525
+bond_length = 1.98655007739548
+torsion_angle = 112.729297940244
+
+structures::add_dummy_atom(molecule = 
+)
+Fe1,
+N2,
+C7, 
+Bond Angle: 129.610437020525
+Bond Length: 1.98655007739548
+Torsion Angle: 112.729297940244
+```
+
+```{r}
+
+subunit_b_primary_atom = 1
+fe_centered <- fe |>
+  structures::set_anchor_by_atom(eleno = subunit_b_primary_atom) |>
+  structures::translate_molecule_to_position(tetrahedron$c3_ACD_B)
+
+
+# Magnitude 
+fe_centered_c3aligned <- fe |>
+    add_dummies_around_axis(dummy_bond_vector = c(0.5, 0, 0), axis = move::normalise(tetrahedron$c3_ACD_B), anchor_atom = subunit_b_primary_atom, n_dummies = 4) 
+  
+
+plot_molecule(fe_centered_c3aligned, colour_map_atom = pal_bondy(), show_anchor = TRUE); 
+plot_tetrahedron_helpers()
+rglwidget()
+# 
+```
+
+<!-- Side by side Labels vs no labels -->
+<!-- ```{r} -->
+<!-- clear3d() -->
+<!-- layout3d(matrix(1:2, nrow = 1)) -->
+<!-- # plot_molecule(fe_tri, label_mode = "none", clear_scene = FALSE, highlight = bonding_atom_ids, highlight_colour = "green") -->
+<!-- plot_molecule(fe_tri_c34aligned, label_mode = "none",clear_scene = FALSE, highlight = bonding_atom_ids, highlight_colour = "green", show_anchor = TRUE) -->
+<!-- plot_c34_helpers(c3=c3, c4=c4) -->
+<!-- rgl::next3d() -->
+<!-- # plot_molecule(pd, label_mode = "none", label = "element", label_colour = NULL, clear_scene = FALSE) -->
+<!-- plot_molecule(fe_tri_c34aligned, label_mode = "no_atoms", label = "elena_eleno", label_colour = NULL, clear_scene = FALSE, highlight = bonding_atom_ids, highlight_colour = "green") -->
+<!-- # plot_c34_helpers(c3=c3, c4=c4) -->
+<!-- rglwidget() -->
+<!-- ``` -->
+
+TODO: rotate around to make full molecule stuff.
+
+Generalise the 2-axis function. Stop setting phi to zero. who cares let the optimiser handle it.
+
+At least add a function that tests symmetry of different types (C3 & C2) (even if we can't automatically identify it ourself)
+
+Matt will look into adding dummy atoms.
+
+Look into rotation of bonds downstream from atom X.
+
+## Full list 
+
+Symemetry, Axes,
+D2, C2 / C2
+D3, C3 / C2
+D4, C4 / C2
+D5, C5 / C2
+D6, C6 / C2
+Edge-capped tetrahedron, C3 / C2
+Face-capped tetrahedron, C3 / C3
+Face-capped cube, C3 / C4 # equivalent to face-capped octahedron
+Edge-capped cube, C3 / C2
+Edge-capped octahedron, C4 / C2
+Edge-capped icosahedron, C5 / C2
+Face-capped icosahedron, C5 / C3 # equivalent to face-capped dodecahedron
+Edge-capped dodecahedron, C3 / C2
+
+
+```{r}
+
+```
+

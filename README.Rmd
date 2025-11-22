@@ -23,7 +23,7 @@ knitr::opts_chunk$set(
 > [!WARNING]  
 > This package is in early development and not yet ready for use
 
-bondy takes two mol2 files and computes ...
+bondy takes two mol2 files and assesses 
 
 ## Installation
 
@@ -42,13 +42,6 @@ remotes::install_github("selkamand/bondy")
 ```{r example}
 library(bondy)
 
-# Paramaters describe the rotation of each of the input molecules + a couple of general structure paramaters.
-pointsymmetry(mol1, mol2)
 
-
-## Rotate. Compute a few angles. 
-
-# O symmetry
-setting_symm
 ```
 

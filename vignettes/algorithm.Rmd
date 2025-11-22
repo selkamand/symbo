@@ -17,15 +17,15 @@ knitr::opts_chunk$set(
 
 ```{r setup}
 library(bondy)
-library(bio3d)
-library(raymolecule)
-library(ChemmineR)
-library(lattice)
-library(ggplot2)
-library(dplyr)
+# library(bio3d)
+# library(raymolecule)
+# library(lattice)
+# library(ggplot2)
+# library(dplyr)
 library(rgl)
 library(chemviewR)
-library(trans)
+library(move)
+library(structures)
 setupKnitr()
 ```
 
@@ -36,8 +36,15 @@ setupKnitr()
 path_fe_tri <- system.file(package = "bondy", "fe_tripod.mol2")
 path_pd <- system.file(package = "bondy", "pd.mol2")
 
-fe_tri <- read.mol2(path_fe_tri)
-pd <-  read.mol2(path_pd)
+fe_tri <- read_mol2(path_fe_tri)
+pd <-  read_mol2(path_pd)
+
+layout3d(matrix(1:2, nrow = 1))
+plot_molecule(fe_tri, label_mode = "none", label = "element", label_colour = NULL, clear_scene = FALSE)
+rgl::next3d()
+# plot_molecule(pd, label_mode = "none", label = "element", label_colour = NULL, clear_scene = FALSE)
+plot_molecule(fe_tri, label_mode = "no_atoms", label = "element", label_colour = NULL, clear_scene = FALSE)
+rglwidget()
 ```
 
 ## Define coordinate system
@@ -66,7 +73,7 @@ c45_3d <- function(){
   rgl::abclines3d(x=c(0, 0, 0), a=c4, color = "purple", lit=FALSE)
 }
 
-c34_plane <- trans::compute_plane_normal_from_vectors(c3, c4)
+c34_plane <- move::compute_plane_normal_from_vectors(c3, c4)
 # magnitude(c3)
 # magnitude(c4)
 # rgl::plot3d(cube_corners, type="s", box=FALSE, axes=TRUE, xlab="", ylab="", zlab="")
@@ -89,65 +96,70 @@ rglwidget()
 Step2:  Import mol and choose 'bonding atoms' (based on element number) - then use center of bonding atom positions as anchor to recenter.
 
 ```{r}
-df_tri_atom <- dplyr::as_tibble(fe_tri$atom)
-df_tri_bonds <- dplyr::as_tibble(fe_tri$bond)
 
 #USER PARAM (atoms of interest: bonding atoms (triple nitrogen) & 'special' test atom (iron)
-# bonding_atoms = c("N5;21", "N5", "N5")
-df_tri_atom[df_tri_atom$elena=="N5",]
 bonding_atom_numbers <- c(6, 32, 58)
+# bonding_atoms = c("N5;21", "N5", "N5")
+# fe_tri@atoms |>
+#   dplyr::filter(elena == "N5")
 
+
+# Locate the centre of our bonding atom positions
+bonding_atom_center <- fe_tri |>
+  structures::filter_atoms(eleno = bonding_atom_numbers) |>
+  structures::locate_molecule_center()
+
+# fe_tri |>
+#   structures::set_anchor_by_position(bonding_atom_center) |>
+#   plot_molecule(show_anchor = TRUE); rglwidget()
+
+# Translate atom so bonding atom is centered
+fe_tri_centered <- fe_tri |>
+  structures::set_anchor_by_position(bonding_atom_center) |>
+  structures::translate_molecule_to_origin()
+
+fe_tri_centered |>
+  structures::filter_atoms(bonding_atom_numbers) |>
+  as.data.frame() |>
+  dplyr::pull(z) |>
+  mean()
+# df_tri_atom <- dplyr::as_tibble(fe_tri@atoms)
+# df_tri_bonds <- dplyr::as_tibble(fe_tri@bonds)
+
+# Special atom
 testelement = "Fe1"
 testelementno = 1
 
-# Locate the centre of our bonding atom positions
-bonding_atom_center_orig <- df_tri_atom |>
-  dplyr::filter(eleno %in% bonding_atom_numbers) |>
-  trans::locate_center()
-
-df_tri_atom_recentered <- df_tri_atom |>
-  mutate(
-    x = x - bonding_atom_center_orig[["x"]],
-    y = y - bonding_atom_center_orig[["y"]],
-    z = z - bonding_atom_center_orig[["z"]],
-  )
-
-# Compute center of bonding atoms
-bonding_atom_center <- df_tri_atom_recentered |>
-   dplyr::filter(eleno %in% bonding_atom_numbers) |>
-    trans::locate_center()
-
-# Create segments to rotated center
-segments_to_center <- df_tri_atom_recentered |>
+# Create segments to translated center
+segments_to_origin <- fe_tri_centered@atoms |>
    dplyr::filter(eleno %in% bonding_atom_numbers) |>
    dplyr::mutate(
-     xend = bonding_atom_center["x"],
-     yend = bonding_atom_center["y"],
-     zend = bonding_atom_center["z"],
+     xend = 0,
+     yend = 0,
+     zend = 0,
      ) |>
-  trans::convert_tidy_segments_to_interleaved()
+  move::convert_tidy_segments_to_interleaved()
 
-# Create segment from
-segments_to_center_special_orig <- df_tri_atom_recentered |>
+# Create segments from testelement to origin
+segments_to_origin_special <- fe_tri_centered@atoms |>
   dplyr::filter(eleno == testelementno) |>
   dplyr::mutate(xend = 0, yend = 0, zend=0) |>
   trans::convert_tidy_segments_to_interleaved()
 
 # Visualise
-plotrgl(
-  atoms = df_tri_atom_recentered, 
-  bonds = df_tri_bonds, 
+plot_molecule(
+  molecule = fe_tri_centered, 
   clear_scene = TRUE, 
-  axes = FALSE, 
   highlight = bonding_atom_numbers, 
+  show_anchor = TRUE,
   highlight_colour = "green"
 )
 rgl::wire3d(rgl::cube3d(), color = "red", lit=FALSE)
 points3d(cube_face, col="red")
 spheres3d(cube_corners, color = "pink", radius=0.1)
 points3d(bonding_atom_center, color = "purple", lit=FALSE)
-with(segments_to_center, rgl::segments3d(x, y, z, lit=FALSE, color = "green"))
-with(segments_to_center_special_orig, rgl::segments3d(x, y, z, lit=FALSE, color = "orange"))
+with(segments_to_anchor, rgl::segments3d(x, y, z, lit=FALSE, color = "green"))
+with(segments_to_origin_special, rgl::segments3d(x, y, z, lit=FALSE, color = "orange"))
 # axes3d(lit=FALSE, color="white") 
 rglwidget()
 
@@ -159,54 +171,54 @@ We need to ensure vector spanning from the center of the binding atoms (triple n
 
 
 ```{r}
-df_tri_atom_recentered
+fe_tri_centered
 
 # Rotate iron atom to point at top right corner
 target = c(x=1, y=1, z=1) # Top right corner (c3 axis)
-specialpos = unlist(df_tri_atom_recentered[df_tri_atom_recentered$eleno==testelementno, c("x","y",'z')]) # 
-# rotate_vector_to_align_with_target(v = specialpos, target = target)
+
+# Get Iron Position
+specialpos = fe_tri_centered |>
+  structures::fetch_atom_position(testelementno)
 
 # Get axis and angle of rotation that would get our iron to face the top right corner
-params <- rotate_vector_to_align_with_target(v = specialpos, target = target, return = "axis_plus_angle")
+params <- move::rotate_vector_to_align_with_target(v = specialpos, target = target, return = "axis_plus_angle")
 
 # Apply that rotation to all the atoms
-new_positions <- purrr::pmap_dfr(df_tri_atom_recentered[c("x", "y", "z")], .f = \(x, y, z){
-  vec = rotate_vector_around_axis(v = c(x, y, z), rotation_axis = params$axis, angle = params$angle)
-  names(vec) <- c("x", "y", "z")
-  return(vec)
-})
+fe_tri_c3aligned <- fe_tri_centered |>
+  structures::transform_molecule(move::rotate_vector_around_axis, rotation_axis = params$axis, angle = params$angle)
 
-df_tri_atom_recentered_rotated <- dplyr::bind_cols(
-  df_tri_atom_recentered[c("eleno", "elena", "elety")], new_positions
-)
 
-df_tri_atom_recentered_rotated 
+ 
+# new_positions <- purrr::pmap_dfr(df_tri_atom_recentered[c("x", "y", "z")], .f = \(x, y, z){
+#   vec = rotate_vector_around_axis(v = c(x, y, z), rotation_axis = params$axis, angle = params$angle)
+#   names(vec) <- c("x", "y", "z")
+#   return(vec)
+# })
+# 
+# df_tri_atom_recentered_rotated <- dplyr::bind_cols(
+#   df_tri_atom_recentered[c("eleno", "elena", "elety")], new_positions
+# )
+# 
+# df_tri_atom_recentered_rotated 
 
 # Recompute  Segments to center for rotated atom
-segments_to_center_rotated <- df_tri_atom_recentered_rotated |>
+segments_to_center_c3aligned <- fe_tri_c3aligned@atoms |>
    dplyr::filter(eleno %in% bonding_atom_numbers) |>
    dplyr::mutate(
-     xend = bonding_atom_center["x"],
-     yend = bonding_atom_center["y"],
-     zend = bonding_atom_center["z"],
+     xend = 0,
+     yend = 0,
+     zend = 0,
      ) |>
-  trans::convert_tidy_segments_to_interleaved()
+  move::convert_tidy_segments_to_interleaved()
 
 # Compute segment between special testing atom (iron) and the zero position. Line should fall along the c4 axis.
-segments_to_center_special <- df_tri_atom_recentered_rotated |>
+segments_from_special_to_center_c3aligned <- fe_tri_c3aligned@atoms |>
   dplyr::filter(eleno == testelementno) |>
   dplyr::mutate(xend = 0, yend = 0, zend=0) |>
   trans::convert_tidy_segments_to_interleaved()
-  
-  
 
-# rgl::plot3d(cube_corners, type="s", box=FALSE, axes=TRUE, xlab="", ylab="", zlab="")
-# points3d(cube_face, col="purple", add=TRUE)
-# with(df_tri_atom_recentered_rotated, points3d(x, y, z, col="red", add=TRUE))
-
-plotrgl(
-  atoms = df_tri_atom_recentered_rotated, 
-  bonds = df_tri_bonds, 
+plot_molecule(
+  fe_tri_c3aligned,
   clear_scene = TRUE, 
   axes = FALSE, 
   highlight = bonding_atom_numbers, 
@@ -216,8 +228,8 @@ rgl::arrow3d(p0 = c(0, 0, 0), p1 = target, lit=FALSE, color="white", type="rotat
 rgl::wire3d(rgl::cube3d(), color = "red", lit=FALSE)
 points3d(cube_face, col="red")
 spheres3d(cube_corners, color = "pink", radius=0.1)
-with(segments_to_center_rotated, rgl::segments3d(x, y, z, lit=FALSE, color = "green"))
-with(segments_to_center_special, rgl::segments3d(x, y, z, lit=FALSE, color = "orange"))
+with(segments_to_center_c3aligned, rgl::segments3d(x, y, z, lit=FALSE, color = "green"))
+with(segments_from_special_to_center_c3aligned, rgl::segments3d(x, y, z, lit=FALSE, color = "orange"))
 rgl::planes3d(c34_plane, lit=FALSE, color="pink", alpha = 0.5)
 c45_3d()
 # points3d(bonding_atom_center, color = "purple", lit=FALSE)
@@ -233,54 +245,29 @@ Step 4: rotate bonding atom (first n5) into plane spanned by C3 & C4
 # plane_normal_norm <- trans::normalise(plane_normal)
 c34_plane
 
-target_binding_atom_no <- df_tri_atom_recentered_rotated |>
-  dplyr::filter(eleno %in% bonding_atom_numbers) |> 
-  slice_min(order_by = eleno, n = 1) |>
-  pull(eleno)
+# Pick one of the n5 atoms (bonding atoms
+target_binding_atom_no <- bonding_atom_numbers[1]
 
-# Pick one of the n5 atoms
-v <- df_tri_atom_recentered_rotated |>
-  dplyr::filter(eleno == target_binding_atom_no) |> 
-  select(x,y,z) |>
-  unlist()
+v <- fetch_atom_position(fe_tri_c3aligned, target_binding_atom_no)
 
 # Find paramaters to rotate one of the binding atoms into plane_normal
-params2 <- trans::rotate_vector_into_a_plane(v, c34_plane, return = "axis_plus_angle")
+params_c34 <- move::rotate_vector_into_a_plane(v, c34_plane, return = "axis_plus_angle")
+
+params_c34
 
 # Apply that rotation to all the atoms
-df_tri_atom_plane <- trans::apply_tranformation_to_table(
-  df_tri_atom_recentered_rotated, f = function(vec){ 
-    trans::rotate_vector_around_axis(v = vec, rotation_axis = params2$axis, angle = params2$angle)
-  })
+fe_tri_c34aligned <- fe_tri_c3aligned |>
+  structures::transform_molecule(move::rotate_vector_around_axis, rotation_axis = params_c34$axis, angle = params_c34$angle)
 
-
-# new_positions2 <- purrr::pmap_dfr(df_tri_atom_recentered_rotated[c("x", "y", "z")], .f = \(x, y, z){
-#   vec = rotate_vector_around_axis(v = c(x, y, z), rotation_axis = params2$axis, angle = params2$angle)
-#   names(vec) <- c("x", "y", "z")
-#   return(vec)
-# })
-
-df_tri_atom_plane <- dplyr::bind_cols(
-  df_tri_atom_recentered_rotated[c("eleno", "elena", "elety")], new_positions2
-)
-
-# 
-# v_after_tri <- df_tri_atom_plane |>
-#   filter(eleno == target_binding_atom_no) |>
-#   select(x, y, z) |>
-#   unlist()
 
 # Compute segment between special testing atom (iron) and the zero position. Line should fall along the c4 axis.
-segments_to_center_3 <- df_tri_atom_plane |>
+segments_to_center_c34 <- fe_tri_c34aligned@atoms |>
   dplyr::filter(eleno %in% bonding_atom_numbers) |>
   dplyr::mutate(xend = 0, yend = 0, zend=0) |>
   trans::convert_tidy_segments_to_interleaved()
 
-# v_rotated = rotate_vector_around_axis_bondy(v=v_after_tri, rotation_axis = normalise(c3), angle = degrees_to_radians(45))
-
-plotrgl(
-  atoms = df_tri_atom_plane, 
-  bonds = df_tri_bonds, 
+plot_molecule(
+  fe_tri_c34aligned,
   clear_scene = TRUE, 
   axes = FALSE, 
   highlight = bonding_atom_numbers, 
@@ -290,19 +277,10 @@ rgl::arrow3d(p0 = c(0, 0, 0), p1 = target, lit=FALSE, color="white", type="rotat
 rgl::wire3d(rgl::cube3d(), color = "red", lit=FALSE)
 rgl::planes3d(c34_plane, lit=FALSE, color="pink", alpha = 0.2)
 points3d(cube_face, col="red")
-with(segments_to_center_3, rgl::segments3d(x, y, z, lit=FALSE, color = "green"))
-# spheres3d(v_rotated, radius = 0.5, color = "darkgreen")
+with(segments_to_center_c34, rgl::segments3d(x, y, z, lit=FALSE, color = "green"))
 spheres3d(cube_corners, color = "pink", radius=0.1)
-# arrow3d(p0 = c(0, 0, 0), p1 = v_after_tri, color="blue", lit=FALSE)
-# arrow3d(p0 = c(0, 0, 0), p1 = c3, color="purple", lit=FALSE)
-# arrow3d(p0 = c(0, 0, 0), p1 = v_rotated, color="red", lit=FALSE)
 c45_3d()
-
-
-
-
 rglwidget()
-# Split v into 
 ```
 
 Step 6: Rotate/slide along C3 axis (topright corner) by phi / s respectively
@@ -534,4 +512,62 @@ Add functions to measure distance between 1 pair of molecules (e.g. 1 C4 dummy +
 Take C4 and C5 phi and S, create 1 combo molecule of Palladium + tripod. Rotate around the C3 3 times (120 degrees each time) then rotate around one of the C4s 4 times by 90 degrees and rotate that whole thing around perpendicular C4 by 180 degrees to give other half of the cube.
 
 
+### Face capped tetrahedral
+
+
+
+```{r}
+
+# For each symmetry ()
+rgl::clear3d()
+
+tetrahedron <- rgl::tetrahedron3d()
+vertex_coords_raw <- tetrahedron$vb[1:3, ]
+vertex_coords <- t(vertex_coords_raw) 
+rownames(vertex_coords) <- LETTERS[seq_along(vertex_coords[,1])]
+colnames(vertex_coords) <- c("x", "y", "z")
+
+faces <- list(
+  BCD = c(2,3,4),  # face opposite A (B,C,D)
+  ACD = c(1,3,4),  # opposite B (A,C,D)
+  ABD = c(1,2,4),  # opposite C (A,B,D)
+  ABC = c(1,2,3)   # opposite D (A,B,C)
+)
+
+# Compute face centroids
+face_centroids <- t(sapply(faces, function(idx) colMeans(vertex_coords[idx, ])))
+
+# Compute edge centers
+edges <- list(
+  AB = c("A","B"),
+  AC = c("A","C"),
+  AD = c("A","D"),
+  BC = c("B","C"),
+  BD = c("B","D"),
+  CD = c("C","D")
+)
+
+edge_centers <- t(sapply(edges, function(e)
+  colMeans(vertex_coords[e, , drop = FALSE])
+))
+
+
+# Compute C3 Vector & C2 vector
+c3_tetrahedron <- move::create_vector_from_start_end(start = vertex_coords["A",], end = face_centroids["BCD",])
+c2_tetrahedron <- move::create_vector_from_start_end(start = edge_centers["AB",], end = edge_centers["CD",])
+
+
+# Generate Visualisation with
+# rgl::wire3d(tetrahedron, lit = FALSE, color="red")
+# rgl::spheres3d(x=vertex_coords, radius = 0.1, color = "pink", lit=FALSE)
+# rgl::points3d(x=face_centroids, size = 10, color = "orange", lit=FALSE)
+# rgl::points3d(x=edge_centers, size = 10, color = "white", lit=FALSE)
+# rgl::spheres3d(x=c(0, 0, 0), radius = 0.1, color = "white", lit=FALSE)
+# rgl::abclines3d(x=face_centroids["BCD",], a=c3_tetrahedron, color ="gold", lit=FALSE)
+# rgl::abclines3d(x=edge_centers["AB",], a=c2_tetrahedron, color ="pink", lit=FALSE)
+plot_tetrahedron_helpers()
+rglwidget()
+```
+
+## Symmetry.
 

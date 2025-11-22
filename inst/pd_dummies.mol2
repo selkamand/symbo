@@ -1,0 +1,23 @@
+@<TRIPOS>MOLECULE
+cubic_f_1
+     5     4     1     0     0
+SMALL
+NO_CHARGES
+****
+Generated from the CSD
+
+@<TRIPOS>ATOM
+     1 Pd1     34.7707  19.7424  34.7707   Pd        1 RES1   0.0000
+     2 N5      33.6998  19.7405  33.0971   Du       1 RES1   0.0000
+     3 N5      36.4444  19.7405  33.6998   Du       1 RES1   0.0000
+     4 N5      35.8417  19.7405  36.4444   Du       1 RES1   0.0000
+     5 N5      33.0971  19.7405  35.8417   Du       1 RES1   0.0000
+@<TRIPOS>BOND
+     1     1     2    1
+     2     1     3    1
+     3     1     4    1
+     4     1     5    1
+@<TRIPOS>SUBSTRUCTURE
+     1 RES1        1 GROUP             0 ****  ****    0  
+@<TRIPOS>CRYSIN
+   46.3610   46.3610   46.3610   90.0000   90.0000   90.0000   226     1

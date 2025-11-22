@@ -1,0 +1,87 @@
+---
+title: "minimal"
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(bondy)
+library(structures)
+library(move)
+
+# Visualisation
+library(chemviewR)
+options(rgl.useNULL=TRUE)
+library(rgl)
+```
+
+# Aim
+
+Bondy takes 
+1. two molecules annotated with their proper rotation axes
+2. User-supplied information about how they bind to one another
+
+And assesses how geometrically feasibly it is for them to assemble into common geometric forms (edge-capped tetrahedrons / face-capped tetrahedrons, edge capped-cube, etc)
+
+
+## Step 1: Prepare molecules
+
+```{r}
+
+# Parse Molecules
+molecule1_path <- system.file(package = "bondy", "fe_dummies.mol2")
+molecule1 <- read_mol2(molecule1_path)
+
+molecule2_path <- system.file(package = "bondy", "pd_dummies.mol2")
+molecule2 <- read_mol2(molecule2_path)
+
+
+# Annotate with their proper rotation axes
+# Iron tripods have a C3 proper rotation axis along the vector formed by the iron molecule and 
+molecule1_plane <- molecule1 |>
+  filter_atoms_by_name("N5") |>
+  compute_plane_from_atoms()
+
+
+
+molecule1 <- molecule1 |>
+  add_symmetry_element_to_molecule(
+    ProperRotationAxis(n = 3, posA = molecule1_plane$centroid, direction = molecule1_plane$normal)
+  )
+
+# Palladium has a C4 symmetry axis 
+molecule2_plane <- molecule2 |>
+  compute_plane_from_atoms()
+
+
+molecule2 <- molecule2 |>
+  add_symmetry_element_to_molecule(
+    ProperRotationAxis(n = 4, posA = molecule2_plane$centroid, direction = molecule2_plane$normal)
+  )
+
+
+
+# Plotting
+layout3d(matrix(1:2, ncol=2))
+plot_molecule(molecule1, clear_scene = FALSE); next3d();
+plot_molecule(molecule2, clear_scene = FALSE)
+rgl::points3d(molecule2_plane$centroid + molecule2_plane$normal*10)
+rgl::points3d(molecule2_plane$centroid- molecule2_plane$normal*10)
+rgl::rglwidget()
+```
+```{r}
+user_molecule1_binding_atom = 7
+user_molecule2_binding_atom = 1
+
+optimisations <- screen_molecules(molecule1 = molecule1, molecule2 = molecule2, mol1_binding_atom = 7, mol2_binding_atom = 1)
+
+# View Results
+print(optimisations)
+```
+
+
