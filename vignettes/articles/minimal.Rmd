@@ -7,16 +7,18 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
+
 ```
 
 ```{r setup}
+options(rgl.useNULL=TRUE)
+
 library(bondy)
 library(structures)
 library(move)
 
 # Visualisation
 library(chemviewR)
-options(rgl.useNULL=TRUE)
 library(rgl)
 ```
 
@@ -80,8 +82,14 @@ user_molecule2_binding_atom = 1
 
 optimisations <- screen_molecules(molecule1 = molecule1, molecule2 = molecule2, mol1_binding_atom = 7, mol2_binding_atom = 1)
 
-# View Results
+# View result summary
 print(optimisations)
 ```
 
+### Create a summary report
 
+Summarise optimisations as  
+
+```{r, eval=FALSE}
+
+create_summary_report()

@@ -206,7 +206,7 @@ S7::method(print, OptimisationResult) <- function(x, ...) {
       "================================",
       sprintf("Shape Classes: %s", x@shapeclass),
       sprintf("Minimised Sum of Squared Distance: %f", x@min_sum_of_squared_distance),
-      sprintf("Minimised Angle (pi = perfect): %f", move::radians_to_degrees(x@angle_between_dummy_binding_vectors)),
+      sprintf("Minimised Angle (pi = perfect): %f", x@angle_between_dummy_binding_vectors),
       sprintf("Convergence: %s", x@convergence)
   )
 }
@@ -217,6 +217,23 @@ is_optimisation_result <- function(x){
   inherits(x, "bondy::OptimisationResult")
 }
 
+get_optimistation_stats <- function(x){
+  stats <- c(
+    "Shape Class" = x@shapeclass,
+    "Minimised Sum of Squared Distance" = x@min_sum_of_squared_distance,
+    "Minimised Angle (pi = perfect)" = x@angle_between_dummy_binding_vectors,
+    "Convergence" = x@convergence,
+    "Calls to Optimisation Function" = x@n_calls_to_fn,
+    "Messages/Warnings: " = x@message
+  )
+
+  df = data.frame(
+    Property = names(stats),
+    Values = as.character(stats)
+  )
+  rownames(df) <- NULL
+  return(df)
+}
 
 # OptimisationResultCollection --------------------------------------------
 
@@ -291,7 +308,16 @@ is_optimisation_result <- function(x){
 #' @export
 OptimisationResultCollection <- S7::new_class(
   name = "OptimisationResultCollection",
+
   properties = list(
+
+    mol1_not_optimised = S7::new_property(
+      class = structures::Molecule3D
+    ),
+    mol2_not_optimised = S7::new_property(
+      class = structures::Molecule3D
+    ),
+
     optimisations = S7::new_property(
       class = S7::class_list,
       validator = function(value){
@@ -311,10 +337,12 @@ OptimisationResultCollection <- S7::new_class(
       }
     )
   ),
-  constructor = function(optimisations = list()){
+  constructor = function(optimisations = list(), mol1_not_optimised, mol2_not_optimised){
     S7::new_object(
     S7::S7_object(),
-    optimisations = optimisations
+    optimisations = optimisations,
+    mol1_not_optimised = mol1_not_optimised,
+    mol2_not_optimised = mol2_not_optimised
     )
   }
 )
