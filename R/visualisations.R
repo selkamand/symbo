@@ -34,4 +34,4 @@ plot_c34_helpers <- function(c3, c4, c3_colour="gold", c4_colour = "purple"){
   rgl::spheres3d(cube_corners, color = "pink", radius=0.1)
 }
 
-pal_bondy <- function() {c(chemviewR::pal_atoms(), "Du" = "yellow")}
+pal_symbo <- function() {c(chemviewR::pal_atoms(), "Du" = "yellow")}

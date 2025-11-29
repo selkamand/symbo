@@ -4,7 +4,11 @@
 \alias{OptimisationResultCollection}
 \title{Collection of optimisation results}
 \usage{
-OptimisationResultCollection(optimisations = list())
+OptimisationResultCollection(
+  optimisations = list(),
+  mol1_not_optimised,
+  mol2_not_optimised
+)
 }
 \arguments{
 \item{optimisations}{A list of \code{\link{OptimisationResult}} objects.

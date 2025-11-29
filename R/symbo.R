@@ -330,7 +330,7 @@ find_optimal_position <- function(
 
 axes_to_shapeclass_reference <- function(){
 
-  df <- read.csv(system.file(package = "bondy", "shapeclass_info.csv"))
+  df <- read.csv(system.file(package = "symbo", "shapeclass_info.csv"))
   df$AxisComboKey <- paste(df$Axis1,df$Axis2)
 
   return(df)
@@ -367,7 +367,7 @@ list_all_shapeclasses <- function(){
 #'   combinations correspond to which geometries. It must contain at least
 #'   the columns \code{ShapeClass}, \code{Axis1_order}, and \code{Axis2_order};
 #'   additional columns (e.g. \code{Notes}) are preserved in the output.
-#'   Defaults to \code{bondy::ShapeClass_axis_map}.
+#'   Defaults to \code{symbo::ShapeClass_axis_map}.
 #'
 #' @return A \code{data.frame} containing all assessable geometries given
 #'   the supplied axes. It includes all columns from \code{mapping}, plus:

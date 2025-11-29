@@ -214,7 +214,7 @@ S7::method(print, OptimisationResult) <- function(x, ...) {
 
 ## Non-Generics  ---------------------------------------------------------------
 is_optimisation_result <- function(x){
-  inherits(x, "bondy::OptimisationResult")
+  inherits(x, "symbo::OptimisationResult")
 }
 
 get_optimistation_stats <- function(x){
@@ -241,7 +241,7 @@ get_optimistation_stats <- function(x){
 #'
 #' @description
 #' `OptimisationResultCollection` is an S7 container object that stores one or
-#' more [`bondy::OptimisationResult`] objects, typically corresponding to
+#' more [`symbo::OptimisationResult`] objects, typically corresponding to
 #' different shape classes or binding modes evaluated in a single alignment /
 #' docking run.
 #'
@@ -263,7 +263,7 @@ get_optimistation_stats <- function(x){
 #'
 #' \describe{
 #'
-#'   \item{optimisations}{A list of [`bondy::OptimisationResult`] objects.
+#'   \item{optimisations}{A list of [`symbo::OptimisationResult`] objects.
 #'   The list may be empty. A validator enforces that every element in this
 #'   list is a valid `OptimisationResult`; otherwise an error is raised.}
 #'
@@ -278,10 +278,10 @@ get_optimistation_stats <- function(x){
 #'
 #' Instances of `OptimisationResultCollection` are usually constructed by
 #' higher-level routines that evaluate multiple shape classes. Each shape
-#' class produces an [`bondy::OptimisationResult`], and these are collected
+#' class produces an [`symbo::OptimisationResult`], and these are collected
 #' into a single object for printing, summarising, or coercion to a data frame.
 #'
-#' @param optimisations A list of [`bondy::OptimisationResult`] objects.
+#' @param optimisations A list of [`symbo::OptimisationResult`] objects.
 #'   Defaults to an empty list.
 #'
 #' @return

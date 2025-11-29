@@ -1,5 +1,5 @@
 ---
-title: "Bondy Report"
+title: "symbo Report"
 output: 
   html_document:
     theme: cosmo
@@ -13,7 +13,7 @@ params:
 knitr::opts_chunk$set(echo = FALSE)
 options(rgl.useNULL=TRUE)
 
-# Collection should be a bondy::OptimisationResultCollection() object
+# Collection should be a symbo::OptimisationResultCollection() object
 collection <- params$collection
 
 mol1_not_optimised <- collection@mol1_not_optimised

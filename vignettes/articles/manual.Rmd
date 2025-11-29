@@ -13,7 +13,7 @@ knitr::opts_chunk$set(
 ```{r setup}
 options(rgl.useNULL=TRUE)
 
-library(bondy)
+library(symbo)
 library(structures)
 library(move)
 
@@ -24,11 +24,12 @@ library(rgl)
 
 # Aim
 
-Bondy takes 
-1. two molecules annotated with their proper rotation axes
+Symbo takes:
+
+1. Two molecules annotated with their proper rotation axes
 2. User-supplied information about how they bind to one another
 
-And assesses how geometrically feasibly it is for them to assemble into common geometric forms (edge-capped tetrahedrons / face-capped tetrahedrons, edge capped-cube, etc)
+And assesses how feasible it is for them to assemble into common geometric forms (edge-capped tetrahedrons / face-capped tetrahedrons, edge capped-cube, etc).
 
 
 ## Step 1: Prepare molecules
@@ -36,10 +37,10 @@ And assesses how geometrically feasibly it is for them to assemble into common g
 ```{r}
 
 # Parse Molecules
-molecule1_path <- system.file(package = "bondy", "fe_dummies.mol2")
+molecule1_path <- system.file(package = "symbo", "fe_dummies.mol2")
 molecule1 <- read_mol2(molecule1_path)
 
-molecule2_path <- system.file(package = "bondy", "pd_dummies.mol2")
+molecule2_path <- system.file(package = "symbo", "pd_dummies.mol2")
 molecule2 <- read_mol2(molecule2_path)
 
 
@@ -76,7 +77,10 @@ rgl::points3d(molecule2_plane$centroid + molecule2_plane$normal*10)
 rgl::points3d(molecule2_plane$centroid- molecule2_plane$normal*10)
 rgl::rglwidget()
 ```
+
+
 ```{r}
+# Specify the binding atom
 user_molecule1_binding_atom = 7
 user_molecule2_binding_atom = 1
 
@@ -88,8 +92,8 @@ print(optimisations)
 
 ### Create a summary report
 
-Summarise optimisations as  
+Summarise the results in a convenient html report. 
 
 ```{r, eval=FALSE}
 
-create_summary_report()
+create_summary_report(optimisations)

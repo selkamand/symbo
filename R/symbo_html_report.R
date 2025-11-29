@@ -8,8 +8,8 @@
 #' @export
 #'
 create_summary_report <- function(optimisations, outdir = getwd(), prefix = "screen_results"){
-  assertions::assert_class(optimisations, class = "bondy::OptimisationResultCollection")
-  path_template <- system.file(package = "bondy", "template/template.Rmd")
+  assertions::assert_class(optimisations, class = "symbo::OptimisationResultCollection")
+  path_template <- system.file(package = "symbo", "template/template.Rmd")
 
   outpath = sprintf("%s/%s.html", outdir, prefix)
   cli::cli_alert_info("Saving report to {.path {outpath}}")
