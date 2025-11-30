@@ -18,11 +18,19 @@ BugReports: https://github.com/selkamand/symbo/issues
 VignetteBuilder: knitr
 Config/Needs/website: rmarkdown
 Imports: 
+    assertions,
+    chemviewR (>= 0.0.0.9000),
     cli,
+    dplyr,
     move (>= 0.0.0.9000),
+    rgl,
+    rlang,
     rmarkdown,
     S7,
-    structures (>= 0.0.0.9000)
+    stats,
+    structures (>= 0.0.0.9000),
+    utils
 Remotes: 
     selkamand/structures,
-    selkamand/move
+    selkamand/move,
+    selkamand/chemviewR

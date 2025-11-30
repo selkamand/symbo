@@ -96,8 +96,8 @@ screen_molecules <- function(molecule1, molecule2,
 
     # Fetch first dummy atoms from each molecule
     cli::cli_alert_info("Fetching the first dummy atom in each molecule")
-    mol1_dummy_eleno <- head(structures::fetch_eleno_by_atom_type(mol1, atom_type = c("Du", "Du.C")), n=1)
-    mol2_dummy_eleno <- head(structures::fetch_eleno_by_atom_type(mol2, atom_type = c("Du", "Du.C")), n=1)
+    mol1_dummy_eleno <- utils::head(structures::fetch_eleno_by_atom_type(mol1, atom_type = c("Du", "Du.C")), n=1)
+    mol2_dummy_eleno <- utils::head(structures::fetch_eleno_by_atom_type(mol2, atom_type = c("Du", "Du.C")), n=1)
 
     assertions::assert_length_greater_than(
       mol1_dummy_eleno,
@@ -227,7 +227,7 @@ find_optimal_position <- function(
   mol1_atom_mx <- mol1_atom_mx_all[c(mol1_dummy_eleno, mol1_binding_atom), , drop=FALSE]
   mol2_atom_mx <- mol2_atom_mx_all[c(mol2_dummy_eleno, mol2_binding_atom), , drop=FALSE]
 
-  optimisation_results <- optim(c("mol1_phi" = 0, "mol1_slide" = 0, "mol2_phi" = 0, "mol2_slide" = 0), fn = function(x){
+  optimisation_results <- stats::optim(c("mol1_phi" = 0, "mol1_slide" = 0, "mol2_phi" = 0, "mol2_slide" = 0), fn = function(x){
     mol1_phi=x[1]
     mol1_slide=x[2]
     mol2_phi=x[3]
@@ -330,7 +330,7 @@ find_optimal_position <- function(
 
 axes_to_shapeclass_reference <- function(){
 
-  df <- read.csv(system.file(package = "symbo", "shapeclass_info.csv"))
+  df <- utils::read.csv(system.file(package = "symbo", "shapeclass_info.csv"))
   df$AxisComboKey <- paste(df$Axis1,df$Axis2)
 
   return(df)
@@ -406,8 +406,8 @@ get_assessable_shapeclasses <- function(molecule1_axes, molecule2_axes) {
   df_combos_annotated$assessable <- !is.na(df_combos_annotated$ShapeClass)
 
   df_combos_annotated <- df_combos_annotated |>
-    dplyr::filter(assessable) |>
-    dplyr::slice_head(n=1, by = ShapeClass)
+    dplyr::filter(.data[["assessable"]]) |>
+    dplyr::slice_head(n=1, by = .data[["ShapeClass"]])
 
   df_combos_annotated$AxisComboKey <- NULL
 

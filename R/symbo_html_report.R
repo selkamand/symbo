@@ -22,7 +22,7 @@ create_summary_report <- function(optimisations, outdir = getwd(), prefix = "scr
     intermediates_dir = outdir
   )
 
-  browseURL(url = outpath)
+  utils::browseURL(url = outpath)
 
 
   invisible(NULL)
