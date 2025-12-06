@@ -33,8 +33,8 @@ htmltools::p("User supplied two input molecules: ", htmltools::strong(mol1_name)
 ```{r fig.height=3, fig.width=8}
 
 rgl::layout3d(matrix(1:2, ncol=2))
-chemviewR::plot_molecule(collection@mol1_not_optimised, clear_scene = FALSE); rgl::next3d();
-chemviewR::plot_molecule(collection@mol2_not_optimised, clear_scene = FALSE)
+chemviewR::plot_molecule(collection@mol1_not_optimised, widget=FALSE, clear_scene = FALSE); rgl::next3d();
+chemviewR::plot_molecule(collection@mol2_not_optimised, widget=FALSE, clear_scene = FALSE)
 # rgl::points3d(molecule2_plane$centroid + molecule2_plane$normal*10)
 # rgl::points3d(molecule2_plane$centroid- molecule2_plane$normal*10)
 rgl::rglwidget()
@@ -89,8 +89,8 @@ for (optimisationresult in collection@optimisations){
   print(htmltools::tagList({  
     mol1 = optimisationresult@mol1
     mol2 = optimisationresult@mol2
-    chemviewR::plot_molecule(mol1)
-    chemviewR::plot_molecule(mol2, clear_scene = FALSE)
+    chemviewR::plot_molecule(mol1, widget = FALSE)
+    chemviewR::plot_molecule(mol2, widget = FALSE, clear_scene = FALSE)
     rgl::rglwidget(width = 800, height = 400)
   }))
   print(htmltools::tagList(
