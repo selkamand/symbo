@@ -9,7 +9,7 @@
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![CRAN
 status](https://www.r-pkg.org/badges/version/symbo)](https://CRAN.R-project.org/package=symbo)
-
+[![R-CMD-check](https://github.com/selkamand/bondy/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/selkamand/bondy/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
 > \[!WARNING\]  
