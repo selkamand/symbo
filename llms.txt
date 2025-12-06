@@ -1,0 +1,51 @@
+# symbo
+
+> \[!WARNING\]  
+> This package is in early development and not yet ready for use
+
+symbo takes two molecular structures and assesses (based on their
+symmetry properties) the geometric feasability of forming different
+higher-order structures (e.g. tetrahedral / edge-capped cube /
+face-capped cube / etc.)
+
+![](images/clipboard-3801034489.png)
+
+![](images/clipboard-1157589261.png)
+
+## Installation
+
+You can install the development version of symbo like so:
+
+``` r
+if (!require("remotes"))
+    install.packages("remotes")
+
+remotes::install_github("selkamand/symbo")
+```
+
+## Getting Started
+
+Please see manual.
+
+# Package index
+
+## All functions
+
+- [`OptimisationResult()`](https://selkamand.github.io/symbo/reference/OptimisationResult.md)
+  : Optimisation result for two aligned molecules
+- [`OptimisationResultCollection()`](https://selkamand.github.io/symbo/reference/OptimisationResultCollection.md)
+  : Collection of optimisation results
+- [`create_summary_report()`](https://selkamand.github.io/symbo/reference/create_summary_report.md)
+  : Create a report summarising results of screen
+- [`find_optimal_position()`](https://selkamand.github.io/symbo/reference/find_optimal_position.md)
+  : Find Optimal Position of molecules
+- [`get_assessable_shapeclasses()`](https://selkamand.github.io/symbo/reference/get_assessable_shapeclasses.md)
+  : Get assessable polyhedral geometries from symmetry axis orders
+- [`screen_molecules()`](https://selkamand.github.io/symbo/reference/screen_molecules.md)
+  : Screen molecules for valid Shape classes
+
+# Articles
+
+### All vignettes
+
+- [Manual](https://selkamand.github.io/symbo/articles/manual.md):

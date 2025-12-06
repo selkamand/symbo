@@ -1,0 +1,102 @@
+# Find Optimal Position of molecules
+
+Find Optimal Position of molecules
+
+## Usage
+
+``` r
+find_optimal_position(
+  mol1,
+  mol2,
+  mol1_axis,
+  mol2_axis,
+  mol1_dummy_eleno,
+  mol2_dummy_eleno,
+  mol1_binding_atom,
+  mol2_binding_atom,
+  method = c("Nelder-Mead", "BFGS", "CG", "L-BFGS-B", "SANN", "Brent"),
+  lower = -Inf,
+  upper = Inf,
+  control = list(),
+  hessian = FALSE
+)
+```
+
+## Arguments
+
+- mol1:
+
+  A
+  [`structures::Molecule3D()`](https://rdrr.io/pkg/structures/man/Molecule3D.html)
+  with a proper rotation axis that has been transformed such that it
+  lies on mol1_axis.
+
+- mol2:
+
+  A
+  [`structures::Molecule3D()`](https://rdrr.io/pkg/structures/man/Molecule3D.html)
+  with a proper rotation axis that has been transformed such that it
+  lies on mol2_axis.
+
+- mol1_axis, mol2_axis:
+
+  symmetry axis about which to transform molecules when searching for a
+  geometrically optimal solution
+
+- mol1_dummy_eleno, mol2_dummy_eleno:
+
+  eleno of dummy atom representing the binding atom of opposing molecule
+
+- mol1_binding_atom:
+
+  the atom you expect will bind to molecule2 (integer representing
+  element number a.k.a eleno).
+
+- mol2_binding_atom:
+
+  the atom you expect will bind to molecule1 (integer representing
+  element number a.k.a eleno).
+
+- method, lower, upper, control, hessian:
+
+  optimisation algorith configuration. See
+  [`stats::optim()`](https://rdrr.io/r/stats/optim.html) for details.
+
+## Value
+
+A list including: mol1_optimal: A
+[`structures::Molecule3D()`](https://rdrr.io/pkg/structures/man/Molecule3D.html)
+object representing the input molecule geometrically optimised to
+minimiise min_sum_of_squared_distance mol2_optimal: A
+[`structures::Molecule3D()`](https://rdrr.io/pkg/structures/man/Molecule3D.html)
+object representing the input molecule geometrically optimised to
+minimiise min_sum_of_squared_distance min_sum_of_squared_distance:
+Minimised sum of squared distance between the dummy atoms of each
+molecule and the opposing atom binding atom. Formally: d1^2 + d2^2 where
+d1 = distance from mol1 dummy to mol2 binding atom and d2 = distance
+from mol2 dummy to mol1 binding atom
+angle_between_dummy_binding_vectors: The angle (in radians) between
+vectors from mol1 dummy atom -\> mol1 bonding atom and mol2 dummy atom
+-\> mol2 bonding atom. This value is calculated from the geometrically
+optimised solution, and if a perfect solution is found would be equal to
+pi (180 degrees) mol1_phi: optimal angle (in radians) about which mol1
+was rotated about mol1_axis to give geometrically optimal solution
+mol2_phi: optimal angle (in radians) about which mol2 was rotated about
+mol2_axis to give geometrically optimal solution mol1_slide: optimal
+distance to slide mol1 along mol1_axis to give geometrically optimal
+solution. mol2_slide: optimal distance to slide mol2 along mol2_axis to
+give geometrically optimal solution. mol1_axis: length-3 vector
+describing xyz direction of symmetry axis about which mol1 was
+transformed around mol2_axis: length-3 vector describing xyz direction
+of symmetry axis about which mol2 was transformed around n_calls_to_fn:
+number of calls to optimisation function (fn) n_calls_to_gr: number of
+calls to gradient function (gr) convergence: convergence value. 1
+indicates that the iteration limit maxit had been reached. 10 indicates
+degeneracy of the Nelder–Mead simplex. 51 indicates a warning from the
+"L-BFGS-B" method; see component message for further details. 52
+indicates an error from the "L-BFGS-B" method; see component message for
+further details. message: A character string giving any additional
+information returned by the optimizer, or NULL. hessian: Only if
+argument hessian is true. A symmetric matrix giving an estimate of the
+Hessian at the solution found. Note that this is the Hessian of the
+unconstrained problem even if the box constraints are active.

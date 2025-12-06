@@ -1,0 +1,9 @@
+pandoc: 3.1.11
+pkgdown: 2.2.0
+pkgdown_sha: ~
+articles:
+  articles/manual: manual.html
+last_built: 2025-12-06T04:57Z
+urls:
+  reference: https://selkamand.github.io/symbo/reference
+  article: https://selkamand.github.io/symbo/articles
