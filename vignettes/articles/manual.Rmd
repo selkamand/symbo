@@ -1,5 +1,5 @@
 ---
-title: "minimal"
+title: "Manual"
 ---
 
 ```{r, include = FALSE}
@@ -10,90 +10,207 @@ knitr::opts_chunk$set(
 
 ```
 
-```{r setup}
-options(rgl.useNULL=TRUE)
+# Symbo
 
-library(symbo)
-library(structures)
-library(move)
-
-# Visualisation
-library(chemviewR)
-library(rgl)
-```
-
-# Aim
+## Aim
 
 Symbo takes:
 
 1. Two molecules annotated with their proper rotation axes
 2. User-supplied information about how they bind to one another
 
-And assesses how feasible it is for them to assemble into common geometric forms (edge-capped tetrahedrons / face-capped tetrahedrons, edge capped-cube, etc).
+And assesses how feasibly the two molecules could assemble into common geometric forms (edge-capped tetrahedrons / face-capped tetrahedrons, edge capped-cube, etc).
 
 
-## Step 1: Prepare molecules
+## Step 0: Setting up your R environment
+
+### Installing R, Rstudio and Rtools
+Start by installing:
+1. R (the programming language itself)
+2. Rstudio Desktop (or some other development environment like Positron)
+3. Rtools (a collection of utilities that allow you to compile and install packages from github)
+
+The boot up your editor, navigate to the console and get ready to install the required R packages
+
+### Installing Required R packags
+
+The only package you'll need to install is symbo by running (in the console)
+
+```r
+if (!require("remotes"))
+    install.packages("remotes")
+
+remotes::install_github("selkamand/symbo", dependencies = TRUE)
+```
+This will install not only symbo but also all of its dependencies.
+
+## Step 1: Setting up your molecular structures
+
+Symbo expects you to input two mol2 files. For example an Iron Tripod and a Palladium atom. Symbo will then assess what higher-order geometric structures these two molecules can feasibly form when bound together.
+
+But first you must inform symbo how these two molecules are likely to bind. To do this add at least 1 dummy atom to each molecule representing the position where you think an atom from the other molecule will bind.
+
+In our example we'd expect the palladium to bind to the nitrogens at each arm of the iron tripod, so we will add a dummy atom representing where we think where exactly the palladium will bind.
+
+While do expect 3 palladiums to bind to the 3 nitrogens of each iron tripod we only need to include 1. 
+
+NOTE: Please ensure your dummy atom is marked as a such in your molecular editor.
+
+Once this is done, repeat the process for your second molecule. In our example we add a dummy nitrogen atom binding at 90 degree angles to the palladium. While technically only one dummy atom is required, adding all 4 here will make it much easier to annotate the proper rotation axis (which we will do in the next step). 
+
+TODO: INSERT EXAMPLE PLOTS
+
+
+Finally, export your molecules in mol2 format, boot up you R editor (Rstudio) and open a new script.
+
+## Step 2: Parsing the mol2 files
+
+Now that you've prepared your mol2 molecules we can load the minto R and ensure everything worked ok.
+
+
+Before loading any packages run the following code which will prevent our 3D plots trying to render in a local graphics engine and instead render exclusively in a web based viewer.
 
 ```{r}
+options(rgl.useNULL=TRUE)
+```
+
+
+Then can start parsing our files using the `read_mol()` function from the [structures](https://github.com/selkamand/structures) package (this will be automatically installed alongside symbo).
+
+To run with your own mol2 files replace the calls to `system.file()` with a string path to your file of interest (e.g. `"/Users/username/Documents/my_molecule_1.mol2"`)
+
+```{r}
+# Load the libraries we need
+library(structures) # For reading mol2 files and annotating molecular structures
+library(chemviewR) # For visualising 3D molecular structures
+library(symbo) # For assessing geometrical feasibility of higher level structures
 
 # Parse Molecules
-molecule1_path <- system.file(package = "symbo", "fe_dummies.mol2")
-molecule1 <- read_mol2(molecule1_path)
+molecule1_filepath <- system.file(package = "symbo", "fe_dummies.mol2")
+molecule1 <- read_mol2(molecule1_filepath)
 
-molecule2_path <- system.file(package = "symbo", "pd_dummies.mol2")
-molecule2 <- read_mol2(molecule2_path)
+molecule2_filepath <- system.file(package = "symbo", "pd_dummies.mol2")
+molecule2 <- read_mol2(molecule2_filepath)
+```
 
+Lets investigate these molecules by printing a summary
 
-# Annotate with their proper rotation axes
-# Iron tripods have a C3 proper rotation axis along the vector formed by the iron molecule and 
+```{r}
+print(molecule1)
+```
+We see that molecule 1 (our iron tripod) contains 83 atoms, 3 of which are dummy atoms representing the palladium binding position. 
+
+Task: Do the same for molecule 2
+
+## Step 3: Visualise your molecules
+
+You can create 3D interactive plots of your molecules at any time using the `plot_molecule` function from `chemviewR` (also automaticaly installed with bondy).
+
+```{r}
+plot_molecule(molecule1)
+plot_molecule(molecule2)
+```
+
+Note to learn more about a specific function just run `?function` in the R console. E.g. to learn how to customise this visualisation you can run `?plot_molecule`
+
+## Step 3: Annotating proper rotation axes
+
+Now that we have our molecules parsed, we need to annotate their proper rotation axes so symbo can use this information to infer potential higher-level structures they might form.
+
+```{r}
+# Iron tripods have a C3 proper rotation axis. 
+# This axis is identical to the normal of the plane formed by our three N5 nitrogen atoms. So lets first compute this plane
 molecule1_plane <- molecule1 |>
   filter_atoms_by_name("N5") |>
   compute_plane_from_atoms()
 
-
-
-molecule1 <- molecule1 |>
-  add_symmetry_element_to_molecule(
-    ProperRotationAxis(n = 3, posA = molecule1_plane$centroid, direction = molecule1_plane$normal)
+## Then we can create a 'ProperRotationAxis' object based on the plane_normal & centroid of the 3 N5 irons
+c3_axis_iron_tripod <- ProperRotationAxis(
+      n = 3, # Axis order; as in (Cn)
+      posA = molecule1_plane$centroid,
+      direction = molecule1_plane$normal
   )
 
-# Palladium has a C4 symmetry axis 
+## Annotate our molecule with this ProperRotationAxis
+molecule1 <- molecule1 |>
+  add_symmetry_element_to_molecule(c3_axis_iron_tripod)
+
+# Visualise The plot to see if it worked
+plot_molecule(molecule1)
+```
+Next lets annotate our second molecule with its symmetry axes.
+
+```{r}
+
+# Palladium has a C4 symmetry axis.
+# Direction is equivalent to the normal or the plane formed by the entire molecule
+# (including all four dummy atoms) so lets compute that plane
 molecule2_plane <- molecule2 |>
   compute_plane_from_atoms()
 
-
+## Then we create a 'ProperRotationAxis' object based on the plane_normal & centroid of the entire molecule
+c4_axis_palladium <- ProperRotationAxis(
+  n = 4, # Axis order; as in (Cn)
+  posA = molecule2_plane$centroid, 
+  direction = molecule2_plane$normal
+)
+ 
+# Then we annotate our molecule with this information
 molecule2 <- molecule2 |>
-  add_symmetry_element_to_molecule(
-    ProperRotationAxis(n = 4, posA = molecule2_plane$centroid, direction = molecule2_plane$normal)
-  )
+  add_symmetry_element_to_molecule(c4_axis_palladium)
 
+# Plot the molecule to make the axis is present
+plot_molecule(molecule2)
+```
 
+## Step 4: Specifying Binding Atoms and Running Optimisation
 
-# Plotting
-layout3d(matrix(1:2, ncol=2))
-plot_molecule(molecule1, clear_scene = FALSE); next3d();
-plot_molecule(molecule2, clear_scene = FALSE)
-rgl::points3d(molecule2_plane$centroid + molecule2_plane$normal*10)
-rgl::points3d(molecule2_plane$centroid- molecule2_plane$normal*10)
-rgl::rglwidget()
+### Specifing Binding Atoms 
+
+Before running optimisation we now just need to know which are the **binding atoms** of each molecule. In our example, the N5 nitrogen atoms from our iron tripod structure (molecule1) will bind to palladium atoms (Pd) from molecule 2, so N5 nitrogen + palladium atoms are our binding atoms. We need to specify these by their element numbers. To find them we can view the full set of atoms in our molecules and find the `eleno` (element number) which correspond to an N5 nitrogen in molecule1 and the Palladium atom in molecule2.
+
+```{r, eval=FALSE}
+View(molecule1@atoms)
+View(molecule2@atoms)
 ```
 
 
+### Running Optimisation
+
+Now we just run the optimisation
+
 ```{r}
 # Specify the binding atom
-user_molecule1_binding_atom = 7
-user_molecule2_binding_atom = 1
-
-optimisations <- screen_molecules(molecule1 = molecule1, molecule2 = molecule2, mol1_binding_atom = 7, mol2_binding_atom = 1)
+optimisations <- screen_molecules(
+  molecule1 = molecule1,
+  molecule2 = molecule2, 
+  mol1_binding_atom = 7, # One of the N5 Nitrogens
+  mol2_binding_atom = 1  # Palladium atom
+)
 
 # View result summary
 print(optimisations)
 ```
 
-### Create a summary report
+Our results show, for each shape class that was evaluated, two values
+
+**D:** minimised sum of squared distances between the dummy atoms of each
+molecule and the opposing binding atom. Formally:
+\eqn{d_1^2 + d_2^2}, where \eqn{d_1} is the distance from the mol1
+dummy atom to the mol2 binding atom, and \eqn{d_2} is the distance
+from the mol2 dummy atom to the mol1 binding atom, evaluated at the
+optimum.
+
+**A:** angle between the two dummy binding vectors:
+Numeric scalar (radians) giving the angle between the vector from mol1 dummy → mol1 binding atom and the vector from mol2 dummy → mol2 binding atom, computed for the optimised geometry. For a "perfect" solution this angle would be π (3.14 ~= 180 degrees).
+
+
+
+## Step 5: Create a summary report
 
 Summarise the results in a convenient html report. 
 
 ```{r, eval=FALSE}
-
 create_summary_report(optimisations)
+```
+
