@@ -16,5 +16,9 @@ Useful links:
 
 ## Author
 
-**Maintainer**: Sam El-Kamand <selkamand@gmail.com>
-([ORCID](https://orcid.org/0000-0003-2270-8088)) \[copyright holder\]
+**Maintainer**: Sam El-Kamand <selkamand@ccia.org.au>
+([ORCID](https://orcid.org/0000-0003-2270-8088))
+
+Authors:
+
+- Matthew Wallis ([ORCID](https://orcid.org/0009-0004-8113-9342))
