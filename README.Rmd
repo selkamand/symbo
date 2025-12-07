@@ -27,9 +27,9 @@ knitr::opts_chunk$set(
 symbo takes two molecular structures and assesses (based on their symmetry properties)  the geometric feasability of forming different higher-order structures (e.g. tetrahedral / edge-capped cube / face-capped cube / etc.)
 
 
-![](images/clipboard-3801034489.png)
+![](man/figures/input_structures.png)
 
-![](images/clipboard-1157589261.png){width="651"}
+![](man/figures/optimised.png){width="651"}
 
 ## Installation
 

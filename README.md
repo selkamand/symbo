@@ -20,9 +20,9 @@ symmetry properties) the geometric feasability of forming different
 higher-order structures (e.g. tetrahedral / edge-capped cube /
 face-capped cube / etc.)
 
-![](images/clipboard-3801034489.png)
+![](man/figures/input_structures.png)
 
-<img src="images/clipboard-1157589261.png" width="651" />
+<img src="man/figures/optimised.png" width="651" />
 
 ## Installation
 

@@ -3,6 +3,8 @@ title: "Symbo Manual"
 editor_options: 
   markdown: 
     wrap: 72
+    toc: true
+    toc_float: true
 ---
 
 ```{r, include = FALSE}
@@ -32,9 +34,9 @@ structures (based on symmetry properties and user-defined binding
 constraints). It does NOT consider any physical properties of the
 molecular structures.
 
-## Step 0: Setting up your R environment
+# Step 0: Setting up your R environment
 
-### Installing R, Rstudio and Rtools
+## Installing R, Rstudio and Rtools
 
 Start by installing:
 
@@ -49,7 +51,7 @@ install packages from github
 Once installed, open your development environment and proceed to install
 Symbo.
 
-### Installing Required R packages
+## Installing Required R packages
 
 Symbo and all its dependencies can be installed by running:
 
@@ -60,7 +62,7 @@ if (!require("remotes"))
 remotes::install_github("selkamand/symbo", dependencies = TRUE)
 ```
 
-## Step 1: Preparing Your Molecular Structures
+# Step 1: Preparing Your Molecular Structures
 
 Symbo expects **two molecules in MOL2 format**, each containing:
 
@@ -96,7 +98,7 @@ tripod. To encode this:
 After adding your dummy atoms to both molecules, export each structure
 as a **.mol2 file**
 
-## Step 2: Loading and Inspecting Your Molecules
+# Step 2: Loading and Inspecting Your Molecules
 
 Now that you've prepared your mol2 molecules, load them into R and
 ensure everything worked ok.
@@ -142,7 +144,7 @@ are dummy atoms representing the palladium binding position.
 
 > **Task** Print the summary for `molecule2` in the same way.
 
-## Step 3: Visualising molecules
+# Step 3: Visualising molecules
 
 Use **chemviewR** to generate interactive 3D plots:
 
@@ -157,12 +159,12 @@ plot_molecule(molecule2)
 > `?`.\
 > For example: `?plot_molecule`
 
-## Step 4: Annotating proper rotation axes
+# Step 4: Annotating proper rotation axes
 
 Symbo requires each molecule to be annotated with at least one **proper
 rotation axes (Cn)** that describe their symmetry.
 
-### Example: Iron tripod (C3 axis)
+## Example: Iron tripod (C3 axis)
 
 ```{r}
 # Iron tripods have a C3 proper rotation axis. 
@@ -186,7 +188,7 @@ molecule1 <- molecule1 |>
 plot_molecule(molecule1)
 ```
 
-### Palladium complex (C4 axis)
+## Palladium complex (C4 axis)
 
 ```{r}
 
@@ -211,9 +213,9 @@ molecule2 <- molecule2 |>
 plot_molecule(molecule2)
 ```
 
-## Step 5 - Specifying binding atoms & running optimisation
+# Step 5 - Specifying binding atoms & running optimisation
 
-### Specifying the binding atoms
+## Specifying the binding atoms
 
 Before running the optimisation, we must identify which atoms act as the
 **binding atoms** for each molecule.
@@ -236,7 +238,7 @@ Locate:
 -   The nitrogen atom that should bind (e.g., element number `7`)
 -   The palladium atom (e.g., element number `1`)
 
-### Running Optimisation
+## Running Optimisation
 
 To find the optimal configuration of our two molecules for each
 higher-order geometric structure they might form, run:
@@ -279,7 +281,7 @@ This is the angle (in radians) between:
 A perfectly aligned arrangement approaches **π radians (\~180°)**. For
 each shape class evaluated, Symbo reports two values:
 
-## Step 6: Create a summary report
+# Step 6: Create a summary report
 
 Symbo can generate a HTML report summarising results:
 

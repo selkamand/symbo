@@ -1,4 +1,6 @@
 url: https://selkamand.github.io/symbo/
 template:
   bootstrap: 5
-
+  bslib:
+    bootswatch: flatly
+    pkgdown-nav-height: 100px
