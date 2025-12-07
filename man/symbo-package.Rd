@@ -4,11 +4,11 @@
 \name{symbo-package}
 \alias{symbo}
 \alias{symbo-package}
-\title{symbo: What the Package Does (One Line, Title Case)}
+\title{symbo: Symmetry-Based Screening of Pairwise Molecular Assemblies}
 \description{
 \if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
 
-What the package does (one paragraph).
+Symbo takes two molecular structures and assesses (based on their symmetry properties) the geometric feasability of forming different higher-order structures like face/edge capped cubes or tetrahedra.
 }
 \seealso{
 Useful links:
