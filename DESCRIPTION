@@ -1,9 +1,13 @@
 Package: symbo
 Title: Symmetry-Based Screening of Pairwise Molecular Assemblies
 Version: 0.0.0.9000
-Authors@R: 
-    person("Sam", "El-Kamand", , "selkamand@gmail.com", role = c("aut", "cre", "cph"),
-           comment = c(ORCID = "0000-0003-2270-8088"))
+Authors@R:
+    c(
+    person("Sam", "El-Kamand", , "selkamand@ccia.org.au", role = c("aut", "cre"),
+           comment = c(ORCID = "https://orcid.org/0000-0003-2270-8088")),
+    person("Matthew", "Wallis", , , role = c("aut"),
+           comment = c(ORCID = "https://orcid.org/0009-0004-8113-9342"))
+   )
 Description: Symbo takes two molecular structures and assesses (based on their symmetry properties) the geometric feasability of forming different higher-order structures like  face/edge capped cubes or tetrahedra.
 License: MIT + file LICENSE
 Suggests: 

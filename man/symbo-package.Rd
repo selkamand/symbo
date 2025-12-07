@@ -20,7 +20,12 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Sam El-Kamand \email{selkamand@gmail.com} (\href{https://orcid.org/0000-0003-2270-8088}{ORCID}) [copyright holder]
+\strong{Maintainer}: Sam El-Kamand \email{selkamand@ccia.org.au} (\href{https://orcid.org/0000-0003-2270-8088}{ORCID})
+
+Authors:
+\itemize{
+  \item Matthew Wallis (\href{https://orcid.org/0009-0004-8113-9342}{ORCID})
+}
 
 }
 \keyword{internal}
