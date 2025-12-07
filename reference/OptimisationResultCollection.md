@@ -36,7 +36,22 @@ OptimisationResultCollection(
 
   A list of
   [`OptimisationResult`](https://selkamand.github.io/symbo/reference/OptimisationResult.md)
-  objects. Defaults to an empty list.
+  objects, each corresponding to the optimisation conducted for one
+  shape class. Defaults to an empty list.
+
+- mol1_not_optimised:
+
+  A
+  [`structures::Molecule3D`](https://rdrr.io/pkg/structures/man/Molecule3D.html)
+  object representing the *original*, unaligned version of molecule 1.
+  This is included in the collection so reports and summaries can
+  display both the starting geometry and the optimised structures.
+
+- mol2_not_optimised:
+
+  A
+  [`structures::Molecule3D`](https://rdrr.io/pkg/structures/man/Molecule3D.html)
+  object representing the *original*, unaligned version of molecule 2.
 
 ## Value
 
@@ -79,17 +94,22 @@ res2 <- OptimisationResult(shapeclass = "shapeB")
 
 # Combine into a collection
 coll <- OptimisationResultCollection(
-  optimisations = list(res1, res2)
+  optimisations = list(res1, res2),
+  mol1_not_optimised = structures::Molecule3D(),
+  mol2_not_optimised = structures::Molecule3D()
 )
-#> Error in OptimisationResultCollection(optimisations = list(res1, res2)): argument "mol1_not_optimised" is missing, with no default
 
 # Print summary
 coll
-#> Error: object 'coll' not found
+#> ================================
+#> Optimisation Result Collection
+#> ================================
+#> Shape Classes Evaluated: 2
+#> -> shapeA (D: NaN | A: NaN)
+#> -> shapeB (D: NaN | A: NaN)
 
 # Coerce to data.frame for further analysis
 df <- as.data.frame(coll)
-#> Error: object 'coll' not found
 df$shapeclass
-#> Error in df$shapeclass: object of type 'closure' is not subsettable
+#> [1] "shapeA" "shapeB"
 ```

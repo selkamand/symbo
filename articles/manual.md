@@ -1,34 +1,44 @@
-# Manual
+# Symbo Manual
 
-## Symbo
+## Introduction to Symbo
 
-### Aim
+Symbo identifies whether two molecules can feasibly assemble into
+higher-order geometric structures (e.g., edge-capped tetrahedra,
+face-capped tetrahedra, face/edge capped cubes, etc.).
 
-Symbo takes:
+Symbo requires:
 
-1.  Two molecules annotated with their proper rotation axes
-2.  User-supplied information about how they bind to one another
+1.  **Two molecules** annotated with their proper rotation axes
+2.  **User-supplied** information about how they bind to one another
 
-And assesses how feasibly the two molecules could assemble into common
-geometric forms (edge-capped tetrahedrons / face-capped tetrahedrons,
-edge capped-cube, etc).
+Symbo then tests all compatible **shape classes** and determines which
+ones can form valid supramolecular structures.
 
-### Step 0: Setting up your R environment
+Symbo exclusively assesses the **geometric feasibility** of different
+structures (based on symmetry properties and user-defined binding
+constraints). It does NOT consider any physical properties of the
+molecular structures.
 
-#### Installing R, Rstudio and Rtools
+## Step 0: Setting up your R environment
 
-Start by installing: 1. R (the programming language itself) 2. Rstudio
-Desktop (or some other development environment like Positron) 3. Rtools
-(a collection of utilities that allow you to compile and install
-packages from github)
+### Installing R, Rstudio and Rtools
 
-The boot up your editor, navigate to the console and get ready to
-install the required R packages
+Start by installing:
 
-#### Installing Required R packags
+1\. **R** - the programming language
 
-The only package you’ll need to install is symbo by running (in the
-console)
+2\. **Rstudio Desktop** (or some other development environment like
+Positron)
+
+3\. **Rtools** - a collection of utilities that allow you to compile and
+install packages from github
+
+Once installed, open your development environment and proceed to install
+Symbo.
+
+### Installing Required R packages
+
+Symbo and all its dependencies can be installed by running:
 
 ``` r
 if (!require("remotes"))
@@ -37,42 +47,45 @@ if (!require("remotes"))
 remotes::install_github("selkamand/symbo", dependencies = TRUE)
 ```
 
-This will install not only symbo but also all of its dependencies.
+## Step 1: Preparing Your Molecular Structures
 
-### Step 1: Setting up your molecular structures
+Symbo expects **two molecules in MOL2 format**, each containing:
 
-Symbo expects you to input two mol2 files. For example an Iron Tripod
-and a Palladium atom. Symbo will then assess what higher-order geometric
-structures these two molecules can feasibly form when bound together.
+- **the full atomic structure**, and
 
-But first you must inform symbo how these two molecules are likely to
-bind. To do this add at least 1 dummy atom to each molecule representing
-the position where you think an atom from the other molecule will bind.
+- **at least one dummy atom** marking *where* binding is expected to
+  occur.
 
-In our example we’d expect the palladium to bind to the nitrogens at
-each arm of the iron tripod, so we will add a dummy atom representing
-where we think where exactly the palladium will bind.
+Example Scenario
 
-While do expect 3 palladiums to bind to the 3 nitrogens of each iron
-tripod we only need to include 1.
+- Molecule 1: An iron tripod
 
-NOTE: Please ensure your dummy atom is marked as a such in your
-molecular editor.
+- Molecule 2: A palladium ion
 
-Once this is done, repeat the process for your second molecule. In our
-example we add a dummy nitrogen atom binding at 90 degree angles to the
-palladium. While technically only one dummy atom is required, adding all
-4 here will make it much easier to annotate the proper rotation axis
-(which we will do in the next step).
+You expect several palladium centres to bind to nitrogen sites on the
+tripod. To encode this:
 
-TODO: INSERT EXAMPLE PLOTS
+1.  Add **dummy atoms** to each nitrogen atom showing where palladium
+    will bind
+2.  Add **dummy atoms** to the palladium molecule showing where nitrogen
+    would bind
 
-Finally, export your molecules in mol2 format, boot up you R editor
-(Rstudio) and open a new script.
+> **Tip**
+>
+> You *only need one dummy atom per molecule* for Symbo to work, but
+> adding all usually makes symmetry annotation easier.
 
-### Step 2: Parsing the mol2 files
+> **Important**
+>
+> Ensure dummy atoms are explicitly marked as *dummy atoms* in your
+> molecular editor.
 
-Now that you’ve prepared your mol2 molecules we can load the minto R and
+After adding your dummy atoms to both molecules, export each structure
+as a **.mol2 file**
+
+## Step 2: Loading and Inspecting Your Molecules
+
+Now that you’ve prepared your mol2 molecules, load them into R and
 ensure everything worked ok.
 
 Before loading any packages run the following code which will prevent
@@ -83,14 +96,14 @@ render exclusively in a web based viewer.
 options(rgl.useNULL=TRUE)
 ```
 
-Then can start parsing our files using the `read_mol()` function from
-the [structures](https://github.com/selkamand/structures) package (this
-will be automatically installed alongside symbo).
+Then parsing your mol2 files using the `read_mol()` function from the
+[structures](https://github.com/selkamand/structures) package (this will
+be automatically installed alongside symbo).
 
 To run with your own mol2 files replace the calls to
 [`system.file()`](https://rdrr.io/r/base/system.file.html) with a string
-path to your file of interest
-(e.g. `"/Users/username/Documents/my_molecule_1.mol2"`)
+path to your file of interest (e.g.
+`"/Users/username/Documents/my_molecule_1.mol2"`)
 
 ``` r
 # Load the libraries we need
@@ -133,13 +146,11 @@ print(molecule1)
 We see that molecule 1 (our iron tripod) contains 83 atoms, 3 of which
 are dummy atoms representing the palladium binding position.
 
-Task: Do the same for molecule 2
+> **Task** Print the summary for `molecule2` in the same way.
 
-### Step 3: Visualise your molecules
+## Step 3: Visualising molecules
 
-You can create 3D interactive plots of your molecules at any time using
-the `plot_molecule` function from `chemviewR` (also automaticaly
-installed with bondy).
+Use **chemviewR** to generate interactive 3D plots:
 
 ``` r
 plot_molecule(molecule1)
@@ -149,15 +160,19 @@ plot_molecule(molecule1)
 plot_molecule(molecule2)
 ```
 
-Note to learn more about a specific function just run `?function` in the
-R console. E.g. to learn how to customise this visualisation you can run
-[`?plot_molecule`](https://rdrr.io/pkg/chemviewR/man/plot_molecule.html)
+> **Tip**
+>
+> To learn more about any function in R, run its name prefixed by a
+> `?`.  
+> For example:
+> [`?plot_molecule`](https://rdrr.io/pkg/chemviewR/man/plot_molecule.html)
 
-### Step 3: Annotating proper rotation axes
+## Step 4: Annotating proper rotation axes
 
-Now that we have our molecules parsed, we need to annotate their proper
-rotation axes so symbo can use this information to infer potential
-higher-level structures they might form.
+Symbo requires each molecule to be annotated with at least one **proper
+rotation axes (Cn)** that describe their symmetry.
+
+### Example: Iron tripod (C3 axis)
 
 ``` r
 # Iron tripods have a C3 proper rotation axis. 
@@ -181,7 +196,7 @@ molecule1 <- molecule1 |>
 plot_molecule(molecule1)
 ```
 
-Next lets annotate our second molecule with its symmetry axes.
+### Palladium complex (C4 axis)
 
 ``` r
 
@@ -206,27 +221,35 @@ molecule2 <- molecule2 |>
 plot_molecule(molecule2)
 ```
 
-### Step 4: Specifying Binding Atoms and Running Optimisation
+## Step 5 - Specifying binding atoms & running optimisation
 
-#### Specifing Binding Atoms
+### Specifying the binding atoms
 
-Before running optimisation we now just need to know which are the
-**binding atoms** of each molecule. In our example, the N5 nitrogen
-atoms from our iron tripod structure (molecule1) will bind to palladium
-atoms (Pd) from molecule 2, so N5 nitrogen + palladium atoms are our
-binding atoms. We need to specify these by their element numbers. To
-find them we can view the full set of atoms in our molecules and find
-the `eleno` (element number) which correspond to an N5 nitrogen in
-molecule1 and the Palladium atom in molecule2.
+Before running the optimisation, we must identify which atoms act as the
+**binding atoms** for each molecule.
+
+In this example:
+
+- The **N5 nitrogen atoms** of the iron tripod (molecule 1) bind to  
+- The **palladium atom** of molecule 2
+
+To determine the correct atom indices (`eleno` values), inspect the atom
+tables:
 
 ``` r
 View(molecule1@atoms)
 View(molecule2@atoms)
 ```
 
-#### Running Optimisation
+Locate:
 
-Now we just run the optimisation
+- The nitrogen atom that should bind (e.g., element number `7`)
+- The palladium atom (e.g., element number `1`)
+
+### Running Optimisation
+
+To find the optimal configuration of our two molecules for each
+higher-order geometric structure they might form, run:
 
 ``` r
 # Specify the binding atom
@@ -258,24 +281,35 @@ print(optimisations)
 #> -> Face-capped cube (D: 0.000019 | A: 3.139092)
 ```
 
-Our results show, for each shape class that was evaluated, two values
+Each evaluated shape class returns two diagnostic values:
 
-**D:** minimised sum of squared distances between the dummy atoms of
-each molecule and the opposing binding atom. Formally: , where is the
-distance from the mol1 dummy atom to the mol2 binding atom, and is the
-distance from the mol2 dummy atom to the mol1 binding atom, evaluated at
-the optimum.
+**Minimised Sum of Squared Distances (D)**
 
-**A:** angle between the two dummy binding vectors: Numeric scalar
-(radians) giving the angle between the vector from mol1 dummy → mol1
-binding atom and the vector from mol2 dummy → mol2 binding atom,
-computed for the optimised geometry. For a “perfect” solution this angle
-would be π (3.14 ~= 180 degrees).
+$$D = d_{1}^{2} + d_{2}^{2}$$
 
-### Step 5: Create a summary report
+where:
 
-Summarise the results in a convenient html report.
+- $d_{1}$ = distance from mol1 dummy → mol2 binding atom
+- $d_{2}$ = distance from mol2 dummy → mol1 binding atom
+
+A lower value means a more geometrically feasible arrangement.
+
+**Angle Between Dummy Binding Vectors (A)**
+
+This is the angle (in radians) between:
+
+- vector from mol1 dummy → mol1 binding atom
+- vector from mol2 dummy → mol2 binding atom
+
+A perfectly aligned arrangement approaches **π radians (~180°)**. For
+each shape class evaluated, Symbo reports two values:
+
+## Step 6: Create a summary report
+
+Symbo can generate a HTML report summarising results:
 
 ``` r
 create_summary_report(optimisations)
 ```
+
+Open report in your browser.

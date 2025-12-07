@@ -22,14 +22,6 @@ get_assessable_shapeclasses(molecule1_axes, molecule2_axes)
   A numeric or character vector of unique proper rotation axis orders
   present in molecule 2 (e.g. `c(2)`).
 
-- mapping:
-
-  A `data.frame` describing which symmetry-axis combinations correspond
-  to which geometries. It must contain at least the columns
-  `ShapeClass`, `Axis1_order`, and `Axis2_order`; additional columns
-  (e.g. `Notes`) are preserved in the output. Defaults to
-  `symbo::ShapeClass_axis_map`.
-
 ## Value
 
 A `data.frame` containing all assessable geometries given the supplied

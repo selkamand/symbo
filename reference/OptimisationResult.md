@@ -32,6 +32,12 @@ OptimisationResult(
 
 ## Arguments
 
+- shapeclass:
+
+  Name of the shape class being evaluated (character scalar), used to
+  identify which supramolecular geometry this optimisation result
+  corresponds to.
+
 - mol1:
 
   A
@@ -45,6 +51,85 @@ OptimisationResult(
   [`structures::Molecule3D`](https://rdrr.io/pkg/structures/man/Molecule3D.html)
   object giving the optimised coordinates of the second molecule.
   Defaults to an empty `Molecule3D()` instance.
+
+- min_sum_of_squared_distance:
+
+  Numeric scalar giving the minimised sum of squared distances between
+  the dummy atoms of each molecule and the opposing binding atom.
+  Formally: \\d_1^2 + d_2^2\\, where \\d_1\\ is the distance from the
+  mol1 dummy atom to the mol2 binding atom, and \\d_2\\ is the distance
+  from the mol2 dummy atom to the mol1 binding atom, evaluated at the
+  optimum.
+
+- angle_between_dummy_binding_vectors:
+
+  Numeric scalar (radians) giving the angle between the vector from mol1
+  dummy \\\to\\ mol1 binding atom and the vector from mol2 dummy \\\to\\
+  mol2 binding atom, computed for the optimised geometry. For a
+  “perfect” solution this angle would be \\\pi\\ (180 degrees).
+
+- mol1_phi:
+
+  Numeric scalar (radians) giving the optimal rotation angle applied to
+  `mol1` about `mol1_axis` to obtain the geometrically optimal
+  configuration.
+
+- mol2_phi:
+
+  Numeric scalar (radians) giving the optimal rotation angle applied to
+  `mol2` about `mol2_axis` in the optimised configuration.
+
+- mol1_slide:
+
+  Numeric scalar giving the optimal distance to translate `mol1` along
+  `mol1_axis` (the “slide” along its symmetry axis) in the optimised
+  configuration.
+
+- mol2_slide:
+
+  Numeric scalar giving the optimal distance to translate `mol2` along
+  `mol2_axis`.
+
+- mol1_axis:
+
+  Numeric length-3 vector describing the Cartesian direction of the
+  symmetry axis about which `mol1` is rotated and slid during
+  optimisation.
+
+- mol2_axis:
+
+  Numeric length-3 vector describing the Cartesian direction of the
+  symmetry axis about which `mol2` is rotated and slid during
+  optimisation.
+
+- n_calls_to_fn:
+
+  Numeric scalar giving the number of calls to the objective function
+  (`fn`) made by the optimiser.
+
+- n_calls_to_gr:
+
+  Numeric scalar giving the number of calls to the gradient function
+  (`gr`) made by the optimiser (where applicable).
+
+- convergence:
+
+  Numeric scalar convergence code, typically matching the codes returned
+  by [`stats::optim()`](https://rdrr.io/r/stats/optim.html) (e.g. `0`
+  for successful completion, `1` for iteration limit reached, and higher
+  codes for warnings or errors depending on the method).
+
+- message:
+
+  Character scalar giving any additional information returned by the
+  optimiser (e.g. warnings, diagnostic messages). May be `NA_character_`
+  if no message is available.
+
+- hessian:
+
+  Numeric object (typically a symmetric matrix) giving an estimate of
+  the Hessian at the solution. If no Hessian is available, this is set
+  to `NaN`. Passing `NULL` will also be stored internally as `NaN`.
 
 ## Value
 

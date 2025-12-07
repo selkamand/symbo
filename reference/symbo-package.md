@@ -1,6 +1,8 @@
-# symbo: What the Package Does (One Line, Title Case)
+# symbo: Symmetry-Based Screening of Pairwise Molecular Assemblies
 
-What the package does (one paragraph).
+Symbo takes two molecular structures and assesses (based on their
+symmetry properties) the geometric feasability of forming different
+higher-order structures like face/edge capped cubes or tetrahedra.
 
 ## See also
 
