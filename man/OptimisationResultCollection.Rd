@@ -11,8 +11,17 @@ OptimisationResultCollection(
 )
 }
 \arguments{
-\item{optimisations}{A list of \code{\link{OptimisationResult}} objects.
+\item{optimisations}{A list of \code{\link{OptimisationResult}} objects,
+each corresponding to the optimisation conducted for one shape class.
 Defaults to an empty list.}
+
+\item{mol1_not_optimised}{A \code{\link[structures:Molecule3D]{structures::Molecule3D}} object
+representing the \emph{original}, unaligned version of molecule 1.
+This is included in the collection so reports and summaries can
+display both the starting geometry and the optimised structures.}
+
+\item{mol2_not_optimised}{A \code{\link[structures:Molecule3D]{structures::Molecule3D}} object
+representing the \emph{original}, unaligned version of molecule 2.}
 }
 \value{
 A new \code{OptimisationResultCollection} S7 object containing the supplied
@@ -71,7 +80,9 @@ res2 <- OptimisationResult(shapeclass = "shapeB")
 
 # Combine into a collection
 coll <- OptimisationResultCollection(
-  optimisations = list(res1, res2)
+  optimisations = list(res1, res2),
+  mol1_not_optimised = structures::Molecule3D(),
+  mol2_not_optimised = structures::Molecule3D()
 )
 
 # Print summary

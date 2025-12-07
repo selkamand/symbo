@@ -12,12 +12,6 @@ rotation axis orders present in molecule 1 (e.g. \code{c(3, 4)}).}
 
 \item{molecule2_axes}{A numeric or character vector of unique proper
 rotation axis orders present in molecule 2 (e.g. \code{c(2)}).}
-
-\item{mapping}{A \code{data.frame} describing which symmetry-axis
-combinations correspond to which geometries. It must contain at least
-the columns \code{ShapeClass}, \code{Axis1_order}, and \code{Axis2_order};
-additional columns (e.g. \code{Notes}) are preserved in the output.
-Defaults to \code{symbo::ShapeClass_axis_map}.}
 }
 \value{
 A \code{data.frame} containing all assessable geometries given

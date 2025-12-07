@@ -12,6 +12,14 @@ create_summary_report(
 }
 \arguments{
 \item{optimisations}{an \code{\link{OptimisationResultCollection}} object produced by \code{\link[=screen_molecules]{screen_molecules()}}}
+
+\item{outdir}{Directory where the HTML report should be written.
+Defaults to the current working directory. The final report will be saved
+as \verb{\{prefix\}.html} inside this folder.}
+
+\item{prefix}{A character string used as the base filename for the report.
+The resulting output file will be named \verb{\{prefix\}.html}. Defaults to
+\code{"screen_results"}.}
 }
 \value{
 invisibly returns NULL (this function is run for its side effects)

@@ -4,6 +4,14 @@
 #'
 #' @param optimisations an [`OptimisationResultCollection`] object produced by [screen_molecules()]
 #'
+#' @param outdir Directory where the HTML report should be written.
+#'   Defaults to the current working directory. The final report will be saved
+#'   as `{prefix}.html` inside this folder.
+#'
+#' @param prefix A character string used as the base filename for the report.
+#'   The resulting output file will be named `{prefix}.html`. Defaults to
+#'   `"screen_results"`.
+
 #' @returns invisibly returns NULL (this function is run for its side effects)
 #' @export
 #'

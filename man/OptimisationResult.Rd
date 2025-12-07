@@ -24,6 +24,10 @@ OptimisationResult(
 )
 }
 \arguments{
+\item{shapeclass}{Name of the shape class being evaluated (character scalar),
+used to identify which supramolecular geometry this optimisation result
+corresponds to.}
+
 \item{mol1}{A \code{\link[structures:Molecule3D]{structures::Molecule3D}} object giving the
 optimised coordinates of the first molecule. Defaults to an empty
 \code{Molecule3D()} instance.}
@@ -31,6 +35,62 @@ optimised coordinates of the first molecule. Defaults to an empty
 \item{mol2}{A \code{\link[structures:Molecule3D]{structures::Molecule3D}} object giving the
 optimised coordinates of the second molecule. Defaults to an empty
 \code{Molecule3D()} instance.}
+
+\item{min_sum_of_squared_distance}{Numeric scalar giving the
+minimised sum of squared distances between the dummy atoms of each
+molecule and the opposing binding atom. Formally:
+\eqn{d_1^2 + d_2^2}, where \eqn{d_1} is the distance from the mol1
+dummy atom to the mol2 binding atom, and \eqn{d_2} is the distance
+from the mol2 dummy atom to the mol1 binding atom, evaluated at the
+optimum.}
+
+\item{angle_between_dummy_binding_vectors}{Numeric scalar (radians)
+giving the angle between the vector from mol1 dummy \eqn{\to} mol1
+binding atom and the vector from mol2 dummy \eqn{\to} mol2 binding
+atom, computed for the optimised geometry. For a “perfect” solution
+this angle would be \eqn{\pi} (180 degrees).}
+
+\item{mol1_phi}{Numeric scalar (radians) giving the optimal rotation
+angle applied to \code{mol1} about \code{mol1_axis} to obtain the geometrically
+optimal configuration.}
+
+\item{mol2_phi}{Numeric scalar (radians) giving the optimal rotation
+angle applied to \code{mol2} about \code{mol2_axis} in the optimised configuration.}
+
+\item{mol1_slide}{Numeric scalar giving the optimal distance to translate
+\code{mol1} along \code{mol1_axis} (the “slide” along its symmetry axis) in the
+optimised configuration.}
+
+\item{mol2_slide}{Numeric scalar giving the optimal distance to translate
+\code{mol2} along \code{mol2_axis}.}
+
+\item{mol1_axis}{Numeric length-3 vector describing the Cartesian
+direction of the symmetry axis about which \code{mol1} is rotated and slid
+during optimisation.}
+
+\item{mol2_axis}{Numeric length-3 vector describing the Cartesian
+direction of the symmetry axis about which \code{mol2} is rotated and slid
+during optimisation.}
+
+\item{n_calls_to_fn}{Numeric scalar giving the number of calls to the
+objective function (\code{fn}) made by the optimiser.}
+
+\item{n_calls_to_gr}{Numeric scalar giving the number of calls to the
+gradient function (\code{gr}) made by the optimiser (where applicable).}
+
+\item{convergence}{Numeric scalar convergence code, typically matching
+the codes returned by \code{\link[stats:optim]{stats::optim()}} (e.g. \code{0} for successful
+completion, \code{1} for iteration limit reached, and higher codes for
+warnings or errors depending on the method).}
+
+\item{message}{Character scalar giving any additional information
+returned by the optimiser (e.g. warnings, diagnostic messages).
+May be \code{NA_character_} if no message is available.}
+
+\item{hessian}{Numeric object (typically a symmetric matrix) giving an
+estimate of the Hessian at the solution. If no Hessian is available,
+this is set to \code{NaN}. Passing \code{NULL} will also be stored internally
+as \code{NaN}.}
 }
 \value{
 A new \code{OptimisationResult} S7 object with the supplied molecules and
