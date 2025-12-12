@@ -3,8 +3,8 @@
 ## Introduction to Symbo
 
 Symbo identifies whether two molecules can feasibly assemble into
-higher-order geometric structures (e.g., edge-capped tetrahedra,
-face-capped tetrahedra, face/edge capped cubes, etc.).
+higher-order geometric structures (e.g., tetrahedra, face/edge capped
+cubes, etc.).
 
 Symbo requires:
 

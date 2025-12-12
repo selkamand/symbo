@@ -12,17 +12,7 @@ face-capped cube / etc.)
 
 ![](reference/figures/optimised.png)
 
-## Installation
-
-You can install the development version of symbo like so:
-
-``` r
-if (!require("remotes"))
-    install.packages("remotes")
-
-remotes::install_github("selkamand/symbo")
-```
-
 ## Getting Started
 
-Please see manual.
+Please see the
+[manual](https://selkamand.github.io/symbo/articles/manual.html).
