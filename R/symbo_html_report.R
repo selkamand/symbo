@@ -19,6 +19,32 @@ create_summary_report <- function(optimisations, outdir = getwd(), prefix = "scr
   assertions::assert_class(optimisations, class = "symbo::OptimisationResultCollection")
   path_template <- system.file(package = "symbo", "template/template.Rmd")
 
+   # Ensure dependencies are available (fail fast with a clear message)
+  required_pkgs <- c(
+    "assertions",
+    "cli",
+    "rmarkdown",
+    "knitr",
+    "htmltools",
+    "rgl",
+    "chemviewR",
+    "reactable",
+    "rlang",
+    "structures"
+  )
+
+  missing <- required_pkgs[!vapply(required_pkgs, rlang::is_installed, logical(1))]
+  if (length(missing) > 0) {
+    rlang::abort(c(
+      "Missing packages required to render the symbo HTML report.",
+      i = paste0(
+        "Install: install.packages(c(",
+        paste(sprintf("%s", shQuote(missing)), collapse = ", "),
+        "))"
+      )
+    ))
+  }
+
   outpath = sprintf("%s/%s.html", outdir, prefix)
   cli::cli_alert_info("Saving report to {.path {outpath}}")
   rmarkdown::render(
