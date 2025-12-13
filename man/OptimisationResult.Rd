@@ -6,6 +6,7 @@
 \usage{
 OptimisationResult(
   shapeclass = "NotSpecified",
+  mol = structures::Molecule3D(),
   mol1 = structures::Molecule3D(),
   mol2 = structures::Molecule3D(),
   min_sum_of_squared_distance = NaN,
@@ -27,6 +28,10 @@ OptimisationResult(
 \item{shapeclass}{Name of the shape class being evaluated (character scalar),
 used to identify which supramolecular geometry this optimisation result
 corresponds to.}
+
+\item{mol}{A \code{\link[structures:Molecule3D]{structures::Molecule3D}} object giving the
+optimised coordinates of the two combined molecules. Defaults to an empty
+\code{Molecule3D()} instance.}
 
 \item{mol1}{A \code{\link[structures:Molecule3D]{structures::Molecule3D}} object giving the
 optimised coordinates of the first molecule. Defaults to an empty
@@ -109,6 +114,11 @@ axes) and bookkeeping information returned by the optimiser.
 The class has the following properties:
 
 \describe{
+
+.  \item{mol}{A \code{\link[structures:Molecule3D]{structures::Molecule3D}} object representing
+the two input molecules combined in their geometrically optimised form (i.e.,
+after applying the optimal rotation/translation that minimises
+\code{min_sum_of_squared_distance}).}
 
 \item{mol1}{A \code{\link[structures:Molecule3D]{structures::Molecule3D}} object representing
 the first input molecule in its geometrically optimised form (i.e.,

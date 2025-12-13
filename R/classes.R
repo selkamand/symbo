@@ -18,6 +18,11 @@
 #'
 #' \describe{
 #'
+#'.  \item{mol}{A [`structures::Molecule3D`] object representing
+#'   the two input molecules combined in their geometrically optimised form (i.e.,
+#'   after applying the optimal rotation/translation that minimises
+#'   `min_sum_of_squared_distance`).}
+#'
 #'   \item{mol1}{A [`structures::Molecule3D`] object representing
 #'   the first input molecule in its geometrically optimised form (i.e.,
 #'   after applying the optimal rotation/translation that minimises
@@ -98,6 +103,10 @@
 #' record of the optimisation outcome for a given shape class or binding
 #' mode.
 #'
+#' @param mol A [`structures::Molecule3D`] object giving the
+#'   optimised coordinates of the two combined molecules. Defaults to an empty
+#'   `Molecule3D()` instance.
+#'
 #' @param mol1 A [`structures::Molecule3D`] object giving the
 #'   optimised coordinates of the first molecule. Defaults to an empty
 #'   `Molecule3D()` instance.
@@ -171,6 +180,7 @@ OptimisationResult <- S7::new_class(
   name = "OptimisationResult",
   properties = list(
     shapeclass = S7::class_character,
+    mol = S7::new_property(class = structures::Molecule3D),
     mol1 = S7::new_property(class = structures::Molecule3D),
     mol2 = S7::new_property(class = structures::Molecule3D),
     min_sum_of_squared_distance = S7::class_numeric,
@@ -205,6 +215,7 @@ OptimisationResult <- S7::new_class(
   ),
   constructor = function(
       shapeclass = "NotSpecified",
+      mol = structures::Molecule3D(),
       mol1 = structures::Molecule3D(),
       mol2 = structures::Molecule3D(),
       min_sum_of_squared_distance = NaN,
@@ -223,6 +234,7 @@ OptimisationResult <- S7::new_class(
     S7::new_object(
       S7::S7_object(),
       shapeclass = shapeclass,
+      mol = mol,
       mol1 = mol1,
       mol2 = mol2,
       min_sum_of_squared_distance = min_sum_of_squared_distance,
