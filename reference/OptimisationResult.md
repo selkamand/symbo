@@ -12,6 +12,7 @@ axes) and bookkeeping information returned by the optimiser.
 ``` r
 OptimisationResult(
   shapeclass = "NotSpecified",
+  mol = structures::Molecule3D(),
   mol1 = structures::Molecule3D(),
   mol2 = structures::Molecule3D(),
   min_sum_of_squared_distance = NaN,
@@ -37,6 +38,13 @@ OptimisationResult(
   Name of the shape class being evaluated (character scalar), used to
   identify which supramolecular geometry this optimisation result
   corresponds to.
+
+- mol:
+
+  A
+  [`structures::Molecule3D`](https://rdrr.io/pkg/structures/man/Molecule3D.html)
+  object giving the optimised coordinates of the two combined molecules.
+  Defaults to an empty `Molecule3D()` instance.
 
 - mol1:
 
@@ -139,6 +147,14 @@ other fields initialised to their type-appropriate defaults.
 ## Fields
 
 The class has the following properties:
+
+- mol:
+
+  A
+  [`structures::Molecule3D`](https://rdrr.io/pkg/structures/man/Molecule3D.html)
+  object representing the two input molecules combined in their
+  geometrically optimised form (i.e., after applying the optimal
+  rotation/translation that minimises `min_sum_of_squared_distance`).
 
 - mol1:
 
