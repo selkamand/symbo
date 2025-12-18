@@ -290,6 +290,12 @@ find_optimal_position <- function(
   v2 = move::create_vector_from_start_end(mol2_pos_dummy, mol2_pos_binding)
   angle_between_dummy_binding_vectors <- move::measure_angle_between_vectors(a = v1, b=v2, degrees = FALSE)
 
+  # Create optimal dummy structure by removing dummy atoms
+  mol_combined_optimal <- structures::remove_dummy_atoms(mol_combined_optimal)
+
+  # Renumber atom and bonds to be contiguous (important for file export)
+  mol_combined_optimal <- structures::renumber_atoms_and_bonds(mol_combined_optimal)
+
   OptimisationResult(
     mol = mol_combined_optimal,
     mol1 = mol1_optimal,
