@@ -86,7 +86,7 @@ print(collection)
 
 ```{r, results='asis'}
 for (optimisationresult in collection@optimisations){
-  print(htmltools::tagList(htmltools::h3(optimisationresult@shapeclass)))
+  print(htmltools::tagList({htmltools::h3(optimisationresult@shapeclass)}))
   print(htmltools::tagList({  
     mol1 = optimisationresult@mol1
     mol2 = optimisationresult@mol2
