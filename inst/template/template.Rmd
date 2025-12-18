@@ -74,6 +74,7 @@ reactable::reactable(
 )
 ```
 
+
 ## Optimisation
 
 ### Summary 
@@ -99,6 +100,31 @@ for (optimisationresult in collection@optimisations){
       bordered = TRUE,
       highlight = TRUE
   )))
+  
+  # Write mol2 to disk where the report is being rendered
+  outdir <- knitr::opts_knit$get("output.dir")
+  if (is.null(outdir) || is.na(outdir) || !nzchar(outdir)) {
+    # fallback: rmarkdown sets this during render; in case it's missing, use working dir
+    outdir <- getwd()
+  }
+
+  safe_shape <- gsub("[^A-Za-z0-9_-]+", "_", optimisationresult@shapeclass)
+  mol_path  <- file.path(outdir, paste0("optimised_", safe_shape, ".mol2"))
+
+  # write the file
+  structures::write_mol2(optimisationresult@mol, mol_path)
+
+  # --- Button points at the written file
+  print(htmltools::tagList(
+    downloadthis::download_file(
+      path = mol_path,
+      button_label = paste0("Export Optimised Mol2 file (", optimisationresult@shapeclass, ")"),
+      button_type = "primary",
+      has_icon = TRUE,
+      icon = "fa fa-save",
+      self_contained = FALSE
+    )
+  ))
 }
 ```
 

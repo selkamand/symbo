@@ -275,6 +275,11 @@ find_optimal_position <- function(
     structures::rotate_molecule_around_vector(axis = mol2_axis, angle = optimal_mol2_phi) |>
     structures::translate_molecule_by_vector(move::normalise(mol2_axis) * optimal_mol2_slide)
 
+  mol_combined_optimal <- structures::combine_molecules(
+    molecule1 = mol1_optimal,
+    molecule2 = mol2_optimal,
+    create_bonds = data.frame(eleno1=mol1_binding_atom, eleno2 = mol2_binding_atom, bond_type = "single")
+  )
 
   # Compute angle created by vectors dummy -> binding atom for each molecule. We'd expect this to be zero
   mol1_pos_dummy <- structures::fetch_atom_position(mol1_optimal, eleno = mol1_dummy_eleno)
@@ -285,7 +290,14 @@ find_optimal_position <- function(
   v2 = move::create_vector_from_start_end(mol2_pos_dummy, mol2_pos_binding)
   angle_between_dummy_binding_vectors <- move::measure_angle_between_vectors(a = v1, b=v2, degrees = FALSE)
 
+  # Create optimal dummy structure by removing dummy atoms
+  mol_combined_optimal <- structures::remove_dummy_atoms(mol_combined_optimal)
+
+  # Renumber atom and bonds to be contiguous (important for file export)
+  mol_combined_optimal <- structures::renumber_atoms_and_bonds(mol_combined_optimal)
+
   OptimisationResult(
+    mol = mol_combined_optimal,
     mol1 = mol1_optimal,
     mol2 = mol2_optimal,
     min_sum_of_squared_distance = optimisation_results$value,
