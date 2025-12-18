@@ -85,37 +85,38 @@ print(collection)
 ## Geometrically Optimal Structures
 
 ```{r, results='asis'}
-for (optimisationresult in collection@optimisations){
-  print(htmltools::tagList({htmltools::h3(optimisationresult@shapeclass)}))
-  print(htmltools::tagList({  
-    mol1 = optimisationresult@mol1
-    mol2 = optimisationresult@mol2
-    chemviewR::plot_molecule(mol1, widget = FALSE)
-    chemviewR::plot_molecule(mol2, widget = FALSE, clear_scene = FALSE)
-    rgl::rglwidget(width = 800, height = 400)
-  }))
-  print(htmltools::tagList(
+out <- list()
+
+for (optimisationresult in collection@optimisations) {
+
+  mol1 <- optimisationresult@mol1
+  mol2 <- optimisationresult@mol2
+
+  # start a fresh rgl scene for this widget
+  rgl::open3d()
+  chemviewR::plot_molecule(mol1, widget = FALSE, clear_scene = TRUE)
+  chemviewR::plot_molecule(mol2, widget = FALSE, clear_scene = FALSE)
+
+  out <- c(out, list(
+    htmltools::h3(optimisationresult@shapeclass),
+    rgl::rglwidget(width = 800, height = 400),
     reactable::reactable(
       get_optimistation_stats(optimisationresult),
       bordered = TRUE,
       highlight = TRUE
-  )))
-  
-  # Write mol2 to disk where the report is being rendered
+    )
+  ))
+
+  # Write mol2 beside the rendered report
   outdir <- knitr::opts_knit$get("output.dir")
-  if (is.null(outdir) || is.na(outdir) || !nzchar(outdir)) {
-    # fallback: rmarkdown sets this during render; in case it's missing, use working dir
-    outdir <- getwd()
-  }
+  if (is.null(outdir) || is.na(outdir) || !nzchar(outdir)) outdir <- getwd()
 
   safe_shape <- gsub("[^A-Za-z0-9_-]+", "_", optimisationresult@shapeclass)
-  mol_path  <- file.path(outdir, paste0("optimised_", safe_shape, ".mol2"))
+  mol_path <- file.path(outdir, paste0("optimised_", safe_shape, ".mol2"))
 
-  # write the file
   structures::write_mol2(optimisationresult@mol, mol_path)
 
-  # --- Button points at the written file
-  print(htmltools::tagList(
+  out <- c(out, list(
     downloadthis::download_file(
       path = mol_path,
       button_label = paste0("Export Optimised Mol2 file (", optimisationresult@shapeclass, ")"),
@@ -126,6 +127,8 @@ for (optimisationresult in collection@optimisations){
     )
   ))
 }
+
+htmltools::tagList(out)
 ```
 
 
