@@ -12,7 +12,12 @@ Description: Symbo takes two molecular structures and assesses (based on their s
 License: MIT + file LICENSE
 Suggests: 
     knitr,
-    testthat (>= 3.0.0)
+    chemviewR (>= 0.0.0.9000),
+    testthat (>= 3.0.0),
+    downloadthis,
+    htmltools,
+    reactable,
+    rgl
 Config/testthat/edition: 3
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -23,14 +28,9 @@ VignetteBuilder: knitr
 Config/Needs/website: rmarkdown
 Imports: 
     assertions,
-    chemviewR (>= 0.0.0.9000),
     cli,
-    downloadthis,
     dplyr,
-    htmltools,
     move (>= 0.0.0.9000),
-    reactable,
-    rgl,
     rlang,
     rmarkdown,
     S7,
