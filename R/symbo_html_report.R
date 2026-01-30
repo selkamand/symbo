@@ -30,6 +30,7 @@ create_summary_report <- function(optimisations, outdir = getwd(), prefix = "scr
     "chemviewR",
     "reactable",
     "rlang",
+    "downloadthis",
     "structures"
   )
 
