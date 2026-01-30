@@ -13,14 +13,14 @@
 Source:
 [`DESCRIPTION`](https://github.com/selkamand/symbo/blob/main/DESCRIPTION)
 
-El-Kamand S, Wallis M (2025). *symbo: Symmetry-Based Screening of
+El-Kamand S, Wallis M (2026). *symbo: Symmetry-Based Screening of
 Pairwise Molecular Assemblies*. R package version 0.0.0.9000,
 <https://github.com/selkamand/symbo>.
 
     @Manual{,
       title = {symbo: Symmetry-Based Screening of Pairwise Molecular Assemblies},
       author = {Sam El-Kamand and Matthew Wallis},
-      year = {2025},
+      year = {2026},
       note = {R package version 0.0.0.9000},
       url = {https://github.com/selkamand/symbo},
     }
